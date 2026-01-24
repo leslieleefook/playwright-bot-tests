@@ -34,9 +34,25 @@ test.describe('TDE Bot Interaction', () => {
         await inquiryInput.fill('Inquiring about technical delivery excellence frameworks for cloud platforms.');
         await page.keyboard.press('Enter');
 
-        // Verify Completion
-        console.log('Verifying completion...');
+        // Verify Completion (on-page)
+        console.log('Verifying interaction completion...');
         await page.waitForTimeout(10000);
-        console.log('TDE Bot flow verification step performed.');
+        console.log('TDE Bot UI stage complete.');
+
+        // 4. Verify Email Receipt via IMAP
+        console.log('Retrieving confirmation email via IMAP...');
+        const { waitForEmailConfirmation } = require('./email_imap_util');
+        const imapConfig = {
+            user: process.env.IMAP_USER || '1677006355115_38182701@zohomail.com',
+            password: process.env.IMAP_PASSWORD,
+            host: process.env.IMAP_HOST || 'imap.zoho.com',
+            port: parseInt(process.env.IMAP_PORT || '993', 10),
+            tls: true,
+            authTimeout: 3000
+        };
+
+        const mail = await waitForEmailConfirmation(imapConfig, 'Service Inquiry'); // Adjust subject as needed
+        expect(mail).toBeTruthy();
+        console.log('TDE Bot email success confirmed.');
     });
 });

@@ -1,0 +1,2 @@
+This is a sample document for testing the Airoi bot file upload feature.
+It represents a typical documentation file that might be uploaded during a bot interaction.

@@ -41,9 +41,25 @@ test.describe('Airoi ROI Calculator Interaction', () => {
         await page.fill('input#fieldpage-6-field-0', EMAIL);
         await page.click('button.cs_button'); // Final Submit
 
-        // Verify Completion
-        console.log('Verifying completion...');
+        // Verify Completion (on-page)
+        console.log('Verifying completion message...');
         await expect(page.getByText('Congratulations you have completed!')).toBeVisible({ timeout: 20000 });
-        console.log('Airoi ROI Calculator flow completed successfully.');
+        console.log('Airoi ROI Calculator UI success confirmed.');
+
+        // 7. Verify Email Receipt via IMAP
+        console.log('Retrieving confirmation email via IMAP...');
+        const { waitForEmailConfirmation } = require('./email_imap_util');
+        const imapConfig = {
+            user: process.env.IMAP_USER || '1677006355115_38182701@zohomail.com',
+            password: process.env.IMAP_PASSWORD,
+            host: process.env.IMAP_HOST || 'imap.zoho.com',
+            port: parseInt(process.env.IMAP_PORT || '993', 10),
+            tls: true,
+            authTimeout: 3000
+        };
+
+        const mail = await waitForEmailConfirmation(imapConfig, 'ROI Calculation Result'); // Adjust subject as needed
+        expect(mail).toBeTruthy();
+        console.log('Airoi Bot email success confirmed.');
     });
 });

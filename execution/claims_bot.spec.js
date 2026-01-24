@@ -34,10 +34,25 @@ test.describe('Claims Bot Interaction', () => {
         await detailsInput.fill('Reporting an issue with a recent service interaction for operational verification.');
         await page.keyboard.press('Enter');
 
-        // Verify Completion
-        console.log('Verifying completion...');
-        // Generic Typebot completion indicator: check for messages or the absence of text indicators
+        // Verify Completion (on-page)
+        console.log('Verifying interaction completion...');
         await page.waitForTimeout(10000); // Give bot time to process
-        console.log('Claims Bot flow verification step performed.');
+        console.log('Claims Bot UI stage complete.');
+
+        // 4. Verify Email Receipt via IMAP
+        console.log('Retrieving confirmation email via IMAP...');
+        const { waitForEmailConfirmation } = require('./email_imap_util');
+        const imapConfig = {
+            user: process.env.IMAP_USER || '1677006355115_38182701@zohomail.com',
+            password: process.env.IMAP_PASSWORD,
+            host: process.env.IMAP_HOST || 'imap.zoho.com',
+            port: parseInt(process.env.IMAP_PORT || '993', 10),
+            tls: true,
+            authTimeout: 3000
+        };
+
+        const mail = await waitForEmailConfirmation(imapConfig, 'Claim Received'); // Adjust subject as needed
+        expect(mail).toBeTruthy();
+        console.log('Claims Bot email success confirmed.');
     });
 });

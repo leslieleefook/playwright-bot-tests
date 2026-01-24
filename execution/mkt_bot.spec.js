@@ -35,10 +35,26 @@ test.describe('MKT Bot Interaction', () => {
         await ideaInput.fill('Automated AI testing framework for conversion bots');
         await page.keyboard.press('Enter');
 
-        // Verify Completion
-        console.log('Verifying completion...');
+        // Verify Completion (on-page)
+        console.log('Verifying completion message...');
         const successMessage = page.locator('text=/Congratulations/i').or(page.locator('text=/Your idea is being worked on/i')).first();
         await expect(successMessage).toBeVisible({ timeout: 45000 });
-        console.log('MKT Bot flow completed successfully.');
+        console.log('MKT Bot UI success confirmed.');
+
+        // 4. Verify Email Receipt via IMAP
+        console.log('Retrieving confirmation email via IMAP...');
+        const { waitForEmailConfirmation } = require('./email_imap_util');
+        const imapConfig = {
+            user: process.env.IMAP_USER || '1677006355115_38182701@zohomail.com',
+            password: process.env.IMAP_PASSWORD,
+            host: process.env.IMAP_HOST || 'imap.zoho.com',
+            port: parseInt(process.env.IMAP_PORT || '993', 10),
+            tls: true,
+            authTimeout: 3000
+        };
+
+        const mail = await waitForEmailConfirmation(imapConfig, 'Product Idea Flow'); // Adjust subject as needed
+        expect(mail).toBeTruthy();
+        console.log('MKT Bot email success confirmed.');
     });
 });

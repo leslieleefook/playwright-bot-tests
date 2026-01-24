@@ -1,24 +1,29 @@
 const { defineConfig, devices } = require('@playwright/test');
+require('dotenv').config();
 
 module.exports = defineConfig({
-    testDir: './execution',
-    timeout: 60 * 1000,
+    testDir: './tests',
+    timeout: 300 * 1000,
     expect: {
-        timeout: 10000
+        timeout: 20000
     },
     fullyParallel: false,
-    reporter: 'list',
+    reporter: [['list'], ['html']],
     use: {
-        actionTimeout: 0,
+        actionTimeout: 10000,
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
-        video: 'off',
-        headless: true, // Start with headless
+        video: 'on',
+        headless: true,
     },
     projects: [
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
+        {
+            name: 'airoi',
+            use: { ...devices['Desktop Chrome'] },
+        }
     ],
 });
