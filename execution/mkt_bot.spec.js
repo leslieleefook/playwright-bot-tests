@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 
-const EMAIL = 'accesssmartwriter3@gmail.com';
+const EMAIL = '1677006355115_38182701@zohomail.com';
 
 test.describe('MKT Bot Interaction', () => {
     test('Complete Product Idea Flow', async ({ page }) => {

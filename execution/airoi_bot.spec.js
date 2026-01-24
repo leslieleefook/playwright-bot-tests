@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-const EMAIL = 'accesssmartwriter3@gmail.com';
+const EMAIL = '1677006355115_38182701@zohomail.com';
 
 test.describe('Airoi ROI Calculator Interaction', () => {
     test('Complete ROI Calculation Flow', async ({ page }) => {
