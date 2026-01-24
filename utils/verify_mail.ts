@@ -1,4 +1,4 @@
-import { IMAP_USER, IMAP_PASSWORD, IMAP_HOST, IMAP_PORT } from './constants.ts';
+import { IMAP_USER, IMAP_PASSWORD, IMAP_HOST, IMAP_PORT } from './constants';
 import imaps from 'imap-simple';
 
 async function verifyMailSettings() {

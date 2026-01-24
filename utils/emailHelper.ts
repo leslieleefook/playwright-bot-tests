@@ -1,14 +1,14 @@
 import { Page } from '@playwright/test';
 const imaps = require('imap-simple');
 import { simpleParser } from 'mailparser';
-import { IMAP_USER, IMAP_PASSWORD, IMAP_HOST, IMAP_PORT, SMTP_HOST, SMTP_PORT, SMTP_SECURE } from './constants.ts';
+import { IMAP_USER, IMAP_PASSWORD, IMAP_HOST, IMAP_PORT, SMTP_HOST, SMTP_PORT, SMTP_SECURE } from './constants';
 import nodemailer from 'nodemailer';
 
 /**
  * Connects to IMAP and waits for an email with the given subject.
  * Returns the parsed email object if found, or null if timeout.
  */
-export async function waitForEmailImap(subject: string, timeoutMs: number = 5 * 60 * 1000): Promise<any | null> {
+export async function waitForEmailImap(subject: string, timeoutMs: number = 10 * 60 * 1000): Promise<any | null> {
     const config = {
         imap: {
             user: IMAP_USER,

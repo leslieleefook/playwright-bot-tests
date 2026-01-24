@@ -10,3 +10,4 @@ export const IMAP_PORT = parseInt(process.env.IMAP_PORT || '993', 10);
 export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.com';
 export const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 export const SMTP_SECURE = process.env.SMTP_SECURE !== 'false'; // Default to true for port 465
+export const NOTIFY_ON_FAILURE = process.env.NOTIFY_ON_FAILURE || 'leslieleefook@incusservices.com';
