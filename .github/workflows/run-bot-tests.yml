@@ -29,15 +29,14 @@ jobs:
       - name: Create .tmp directory
         run: mkdir -p .tmp
 
-      - name: Restore Gmail Session
-        run: |
-          echo '${{ secrets.GMAIL_STORAGE_STATE }}' > .tmp/storageState.json
-        shell: bash
-
       - name: Run Bot Interaction Suite
         run: node execution/master_bot_test.js
         env:
           FAILURE_RECIPIENT: ${{ secrets.FAILURE_RECIPIENT || 'leslieleefook@incusservices.com' }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST || 'outlook.office365.com' }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT || '993' }}
 
       - name: Upload Test Results
         if: always()
