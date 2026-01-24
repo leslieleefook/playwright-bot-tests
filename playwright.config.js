@@ -8,12 +8,13 @@ module.exports = defineConfig({
         timeout: 20000
     },
     fullyParallel: false,
+    retries: process.env.CI ? 2 : 0,
     reporter: [['list'], ['html']],
     use: {
         actionTimeout: 10000,
-        trace: 'on-first-retry',
+        trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
-        video: 'on',
+        video: 'retain-on-failure',
         headless: true,
     },
     projects: [
