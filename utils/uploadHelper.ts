@@ -1,37 +1,34 @@
-import { Page } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 import * as path from 'path';
 
 /**
- * Uploads a file to a specified selector.
- * Handles cases where the input might be hidden or requires a file chooser.
+ * Uploads a file to a specified selector or locator.
  */
 export async function uploadFile(
     page: Page,
-    selector: string,
+    selector: string | Locator,
     filePath: string,
     isInput: boolean = true
 ): Promise<void> {
     const absolutePath = path.resolve(filePath);
-    console.log(`[UPLOAD] Uploading ${absolutePath} to ${selector}...`);
+    const locator = typeof selector === 'string' ? page.locator(selector) : selector;
+
+    console.log(`[UPLOAD] Uploading ${absolutePath}...`);
 
     if (isInput) {
-        // Standard <input type="file">
-        await page.setInputFiles(selector, absolutePath);
+        await locator.setInputFiles(absolutePath);
     } else {
-        // Trigger file chooser by clicking an element
         const fileChooserPromise = page.waitForEvent('filechooser');
-        await page.click(selector);
+        await locator.click();
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(absolutePath);
     }
 }
 
 /**
- * Specifically for Typebot style uploads which often use a hidden input
+ * Specifically for Typebot style uploads.
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
-    // Typebot usually has an input[type="file"] hidden somewhere
-    // We try to find it specifically within the typebot container
     const inputSelector = 'input[type="file"]';
 
     try {
@@ -42,7 +39,7 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
         } else {
             console.log('[UPLOAD] No standard file input found, searching for dropzones...');
             const uploadZone = page.locator('div[aria-label*="upload"], button:has-text("Upload"), .typebot-upload-button').first();
-            await uploadFile(page, uploadZone.toString(), filePath, false);
+            await uploadFile(page, uploadZone, filePath, false);
         }
     } catch (err: any) {
         console.error(`[UPLOAD] Failed during Typebot upload attempt: ${err.message}`);
