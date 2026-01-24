@@ -9,7 +9,7 @@ module.exports = defineConfig({
     },
     fullyParallel: false,
     retries: process.env.CI ? 2 : 0,
-    reporter: [['list'], ['html']],
+    reporter: process.env.CI ? 'blob' : [['list'], ['html']],
     use: {
         actionTimeout: 10000,
         trace: 'retain-on-failure',

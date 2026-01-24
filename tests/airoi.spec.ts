@@ -59,10 +59,10 @@ test.describe('Airoi Bot Email Flow', () => {
         console.log('Step 5 complete.');
 
         // Step 6: Email
-        console.log('Filling Step 6 (Email)...');
+        console.log('Providing Email...');
         await page.fill('input#fieldpage-6-field-0', BOT_EMAIL);
         await page.click('button.cs_button'); // Final Submit
-        console.log('Step 6 complete.');
+        console.log('Email submission complete.');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');

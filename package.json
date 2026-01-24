@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "playwright test",
+    "merge-reports": "playwright merge-reports --reporter html ./all-blob-reports"
   },
   "keywords": [],
   "author": "",
