@@ -1,8 +1,9 @@
+# Bot Testing Suite - Triggering re-parse
 name: Bot Testing Suite
 
 on:
   schedule:
-    - cron: '0 12 * * *' # Run daily at 12:00 UTC
+    - cron: "0 12 * * *" # Run daily at 12:00 UTC
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -16,8 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
