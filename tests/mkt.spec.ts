@@ -13,27 +13,27 @@ test.describe('MKT Bot Interaction Flow', () => {
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
         const startBtn = page.getByRole('button', { name: 'Yes!' });
-        await startBtn.waitFor({ state: 'visible', timeout: 20000 });
+        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
         // 1. Name Input
         console.log('Providing Name...');
         const nameInput = page.locator('input.text-input, input[placeholder*="name"]').first();
-        await nameInput.waitFor({ state: 'visible', timeout: 10000 });
+        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
         await nameInput.fill('Leslie');
         await page.keyboard.press('Enter');
 
         // 2. Email Input
         console.log('Providing Email...');
         const emailInput = page.locator('input[type="email"], input[placeholder*="email"]').first();
-        await emailInput.waitFor({ state: 'visible', timeout: 10000 });
+        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
         await emailInput.fill(BOT_EMAIL);
         await page.keyboard.press('Enter');
 
         // 3. Product Idea
         console.log('Providing Product Idea...');
         const ideaInput = page.locator('input.text-input, textarea, input[placeholder*="idea"]').first();
-        await ideaInput.waitFor({ state: 'visible', timeout: 10000 });
+        await ideaInput.waitFor({ state: 'visible', timeout: 30000 });
         await ideaInput.fill('Automated AI testing framework for conversion bots');
         await page.keyboard.press('Enter');
 

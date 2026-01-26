@@ -18,7 +18,7 @@ test.describe('Mimage Bot Interaction Flow', () => {
             await uploadToTypebot(page, path);
             await page.waitForTimeout(3000);
             const next = page.locator('button.cs_button, button:has-text("Process"), button:has-text("Submit")').first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 

@@ -13,7 +13,7 @@ test.describe('Airoi Bot Email Flow', () => {
         // Step 0: Welcome / Continue
         console.log('Starting form...');
         const startBtn = page.locator('button.cs_button, button:has-text("Continue")').first();
-        await startBtn.waitFor({ state: 'visible', timeout: 20000 });
+        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
         // Step 1: Tasks

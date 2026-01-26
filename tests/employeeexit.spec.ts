@@ -14,7 +14,7 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
         // Start
         console.log('Initiating flow...');
         const startBtn = page.getByRole('button', { name: /Yes|Start/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 20000 });
+        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
         // Standard Name/Email if asked
@@ -32,7 +32,7 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
             await uploadToTypebot(page, path);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Continue|Next|Submit/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 

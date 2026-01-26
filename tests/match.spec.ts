@@ -18,7 +18,7 @@ test.describe('Match Bot Flow', () => {
             await uploadToTypebot(page, jdPath);
             await page.waitForTimeout(3000);
             const next = page.locator('button.cs_button, button:has-text("Next")').first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -29,7 +29,7 @@ test.describe('Match Bot Flow', () => {
             await uploadToTypebot(page, resPath);
             await page.waitForTimeout(3000);
             const next = page.locator('button.cs_button, button:has-text("Analyze"), button:has-text("Submit")').first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 

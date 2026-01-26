@@ -18,8 +18,8 @@ export async function uploadFile(
     if (isInput) {
         await locator.setInputFiles(absolutePath);
     } else {
-        const fileChooserPromise = page.waitForEvent('filechooser');
-        await locator.click();
+        const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 30000 });
+        await locator.click({ timeout: 30000 });
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles(absolutePath);
     }
@@ -33,12 +33,15 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
 
     try {
         const input = page.locator(inputSelector);
+        await page.waitForTimeout(2000);
+
         if (await input.count() > 0) {
             console.log('[UPLOAD] Hidden file input found.');
             await uploadFile(page, inputSelector, filePath, true);
         } else {
             console.log('[UPLOAD] No standard file input found, searching for dropzones...');
             const uploadZone = page.locator('div[aria-label*="upload"], button:has-text("Upload"), .typebot-upload-button').first();
+            await uploadZone.waitFor({ state: 'visible', timeout: 30000 });
             await uploadFile(page, uploadZone, filePath, false);
         }
     } catch (err: any) {

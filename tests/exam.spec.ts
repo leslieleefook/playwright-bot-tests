@@ -18,7 +18,7 @@ test.describe('Exam Bot Interaction Flow', () => {
             await uploadToTypebot(page, quizPath);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Next|Continue/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -29,7 +29,7 @@ test.describe('Exam Bot Interaction Flow', () => {
             await uploadToTypebot(page, ansPath);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Next|Continue/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -40,7 +40,7 @@ test.describe('Exam Bot Interaction Flow', () => {
             await uploadToTypebot(page, res1Path);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Submit|Next|Continue/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 

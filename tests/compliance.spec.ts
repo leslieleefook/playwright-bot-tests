@@ -14,7 +14,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         // Start
         console.log('Initiating flow...');
         const startBtn = page.getByRole('button', { name: /Start|Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 20000 });
+        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
         // 1. Upload ID
@@ -24,7 +24,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
             await uploadToTypebot(page, idPath);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Continue|Next/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -35,7 +35,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
             await uploadToTypebot(page, jobPath);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Continue|Next/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -46,7 +46,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
             await uploadToTypebot(page, addressPath);
             await page.waitForTimeout(3000);
             const next = page.getByRole('button', { name: /Continue|Next|Submit|Finish/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 

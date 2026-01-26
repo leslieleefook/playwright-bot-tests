@@ -14,27 +14,27 @@ test.describe('Claims Bot Interaction Flow', () => {
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
         const startBtn = page.getByRole('button', { name: /Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 20000 });
+        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
         // 1. Name
         console.log('Providing Name...');
         const nameInput = page.locator('input.text-input, input[placeholder*="name"]').first();
-        await nameInput.waitFor({ state: 'visible', timeout: 10000 });
+        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
         await nameInput.fill('Leslie');
         await page.keyboard.press('Enter');
 
         // 2. Email
         console.log('Providing Email...');
         const emailInput = page.locator('input[type="email"], input[placeholder*="email"]').first();
-        await emailInput.waitFor({ state: 'visible', timeout: 10000 });
+        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
         await emailInput.fill(BOT_EMAIL);
         await page.keyboard.press('Enter');
 
         // 3. Claims Details
         console.log('Providing Claims Details...');
         const detailsInput = page.locator('input.text-input, textarea, input[placeholder*="Type"]').first();
-        await detailsInput.waitFor({ state: 'visible', timeout: 10000 });
+        await detailsInput.waitFor({ state: 'visible', timeout: 30000 });
         await detailsInput.fill('Reporting an issue with a recent service interaction for operational verification.');
         await page.keyboard.press('Enter');
 

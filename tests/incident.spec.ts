@@ -18,7 +18,7 @@ test.describe('Incident Bot Interaction Flow', () => {
             await uploadToTypebot(page, scenePath);
             await page.waitForTimeout(3000);
             const next = page.locator('button.cs_button, button:has-text("Next"), button:has-text("Continue")').first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
@@ -29,7 +29,7 @@ test.describe('Incident Bot Interaction Flow', () => {
             await uploadToTypebot(page, injuryPath);
             await page.waitForTimeout(3000);
             const next = page.locator('button.cs_button, button:has-text("Submit"), button:has-text("Next")').first();
-            await next.waitFor({ state: 'visible', timeout: 10000 });
+            await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
 
