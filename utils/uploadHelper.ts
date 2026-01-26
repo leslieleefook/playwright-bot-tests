@@ -29,9 +29,10 @@ export async function uploadFile(
  * Specifically for Typebot style uploads.
  * 
  * Typebot uses a web component with shadow DOM. We need multiple strategies:
- * 1. Playwright's getByLabel() pierces shadow DOM for accessible elements
- * 2. File chooser approach by clicking the dropzone
- * 3. Direct shadow DOM access via evaluate()
+ * 1. Wait for shadow DOM content to fully render (not just attached)
+ * 2. Playwright's getByLabel() pierces shadow DOM for accessible elements
+ * 3. File chooser approach by clicking the dropzone
+ * 4. Direct shadow DOM access via evaluate()
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
     const absolutePath = path.resolve(filePath);
@@ -40,18 +41,42 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
     try {
         // Wait for Typebot web component to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
-        await page.waitForTimeout(3000); // Allow shadow DOM and chat to fully render
+        
+        // CRITICAL: Wait for shadow DOM content to actually render
+        // The shadow DOM exists immediately but content loads asynchronously
+        console.log('[UPLOAD] Waiting for shadow DOM content to render...');
+        await page.waitForFunction(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            // Wait until shadow DOM has actual content (not empty)
+            // Look for either file input or any chat container structure
+            const hasFileInput = shadow.querySelector('input[type="file"]');
+            const hasContent = shadow.children && shadow.children.length > 0;
+            const hasUploadArea = shadow.querySelector('[class*="upload"], [class*="dropzone"], label[for*="file"]');
+            return hasFileInput || hasUploadArea || hasContent;
+        }, { timeout: 30000 });
+        
+        // Additional small wait for any animations/transitions
+        await page.waitForTimeout(1000);
         
         // Debug: Check shadow DOM mode
         const shadowInfo = await page.evaluate(() => {
             const typebot = document.querySelector('typebot-standard');
             if (!typebot) return { exists: false };
             const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return { exists: true, hasShadow: false };
+            const fileInput = shadow.querySelector('input[type="file"]');
+            const uploadArea = shadow.querySelector('[class*="upload"], [class*="dropzone"], label[for*="file"]');
             return {
                 exists: true,
-                hasShadow: !!shadow,
+                hasShadow: true,
                 mode: shadow?.mode || 'no-shadowroot',
-                innerHTML: typebot.innerHTML?.substring(0, 200) || ''
+                childCount: shadow.children?.length || 0,
+                hasFileInput: !!fileInput,
+                hasUploadArea: !!uploadArea,
+                innerHTML: shadow.innerHTML?.substring(0, 300) || ''
             };
         });
         console.log('[UPLOAD] Shadow DOM info:', JSON.stringify(shadowInfo));
@@ -100,14 +125,28 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
         if (shadowInfo.hasShadow) {
             console.log('[UPLOAD] Trying direct shadow DOM access...');
             
+            // First scroll the upload area into view if needed
+            await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                const shadow = (typebot as any)?.shadowRoot;
+                if (!shadow) return;
+                const uploadArea = shadow.querySelector('[class*="upload"], [class*="dropzone"], label[for*="file"]');
+                if (uploadArea) {
+                    (uploadArea as HTMLElement).scrollIntoView({ behavior: 'instant', block: 'center' });
+                }
+            });
+            await page.waitForTimeout(500);
+            
             const fileInputHandle = await page.evaluateHandle(() => {
                 const typebot = document.querySelector('typebot-standard');
                 const shadow = (typebot as any)?.shadowRoot;
                 if (!shadow) return null;
-                // Try multiple selectors
+                // Try multiple selectors - be thorough
                 return shadow.querySelector('input[type="file"]') ||
                        shadow.querySelector('input#dropzone-file') ||
-                       shadow.querySelector('[id*="file"]');
+                       shadow.querySelector('#dropzone-file') ||
+                       shadow.querySelector('[id*="file"][type="file"]') ||
+                       shadow.querySelector('input.hidden[type="file"]');
             });
 
             const isValid = await fileInputHandle.evaluate((el: any) => !!el);
