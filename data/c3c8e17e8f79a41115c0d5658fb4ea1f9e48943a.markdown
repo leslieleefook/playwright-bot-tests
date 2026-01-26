@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus Exam Scoring Assistant
+            - generic [ref=e33]: We will assist you with assessing student answer sheets without spending hours sifting through all the paper.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our AI teammates will be involved in the analysis
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your quiz
+            - generic [ref=e75]: Can you provide the quiz?
+        - generic [ref=e77]:
+          - generic [ref=e79]:
+            - img [ref=e81]
+            - generic [ref=e84]:
+              - generic [ref=e85]: exam_quizz.docx
+              - generic [ref=e86]: Word
+          - generic [ref=e88]: File uploaded
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - figure [ref=e93]:
+            - img "Bot avatar" [ref=e94]
+          - generic [ref=e95]:
+            - generic [ref=e101]: Great! Next let's upload your answers
+            - generic [ref=e107]: Can you provide the answers?
+        - generic [ref=e109]:
+          - generic [ref=e111]:
+            - img [ref=e113]
+            - generic [ref=e116]:
+              - generic [ref=e117]: exam_answers.docx
+              - generic [ref=e118]: Word
+          - generic [ref=e120]: File uploaded
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - figure [ref=e125]:
+            - img "Bot avatar" [ref=e126]
+          - generic [ref=e127]:
+            - generic [ref=e133]: Great! Now let's look at the student responses.
+            - generic [ref=e139]: Please upload the student responses
+        - generic [ref=e141]:
+          - img "Attached image 1" [ref=e143] [cursor=pointer]
+          - generic [ref=e145]: File uploaded
+      - generic [ref=e150]:
+        - button "Start analyzing" [ref=e152] [cursor=pointer]
+        - button "Add another response" [ref=e154] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e156]
+```
