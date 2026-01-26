@@ -25,13 +25,21 @@ test.describe('TDE Bot Interaction Flow', () => {
         console.log('Providing Name...');
         await fillTextbox('Leslie');
 
-        // 2. Email (if asked)
+        // 2. Email
         console.log('Providing Email...');
         await fillTextbox(BOT_EMAIL);
 
-        // 3. Service Interest/Details
-        console.log('Providing Service Inquiry...');
-        await fillTextbox('Inquiring about technical delivery excellence frameworks for cloud platforms.');
+        // 3. Company Name
+        console.log('Providing Company Name...');
+        await fillTextbox('Incus Services');
+
+        // 4. Challenge/Problem
+        console.log('Providing Challenge...');
+        await fillTextbox('Low awareness of AI and how to leverage it for business operations');
+
+        // 5. Industry
+        console.log('Providing Industry...');
+        await fillTextbox('Technology');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');
