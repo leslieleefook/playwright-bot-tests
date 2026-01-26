@@ -26,40 +26,54 @@ export async function uploadFile(
 }
 
 /**
- * Specifically for Typebot style uploads.
+ * Specifically for Typebot style uploads - handles shadow DOM.
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
-    const inputSelector = 'input[type="file"]';
+    const absolutePath = path.resolve(filePath);
+    console.log(`[UPLOAD] Attempting Typebot upload: ${absolutePath}`);
 
     try {
-        const input = page.locator(inputSelector);
-        await page.waitForTimeout(2000);
-
-        if (await input.count() > 0) {
-            console.log('[UPLOAD] Hidden file input found.');
-            await uploadFile(page, inputSelector, filePath, true);
-        } else {
-            console.log('[UPLOAD] No standard file input found, searching for dropzones...');
-            const uploadZone = page.locator('div[aria-label*="upload"], button:has-text("Upload"), .typebot-upload-button').first();
-            await uploadZone.waitFor({ state: 'visible', timeout: 30000 });
-            await uploadFile(page, uploadZone, filePath, false);
+        // Typebot uses shadow DOM - the file input is inside typebot-standard shadow root
+        // Use Playwright's built-in shadow DOM piercing with >>
+        const shadowInput = page.locator('typebot-standard').locator('#dropzone-file');
+        
+        // Check if shadow DOM input exists
+        if (await shadowInput.count() > 0) {
+            console.log('[UPLOAD] Found shadow DOM file input');
+            await shadowInput.setInputFiles(absolutePath);
+            return;
         }
+
+        // Fallback: try regular file input
+        const regularInput = page.locator('input[type="file"]');
+        if (await regularInput.count() > 0) {
+            console.log('[UPLOAD] Found regular file input');
+            await regularInput.first().setInputFiles(absolutePath);
+            return;
+        }
+
+        // Fallback: click upload zone and use file chooser
+        console.log('[UPLOAD] Using file chooser fallback');
+        const uploadZone = page.locator('text=Click to upload').first();
+        const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 30000 });
+        await uploadZone.click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(absolutePath);
+
     } catch (err: any) {
-        console.error(`[UPLOAD] Failed during Typebot upload attempt: ${err.message}`);
+        console.error(`[UPLOAD] Failed: ${err.message}`);
         throw err;
     }
 }
 
 /**
  * Resolves a fixture path based on bot name and step/description.
- * Example: getFixturePath('compliance', 'id') -> './fixtures/compliance_id.jpg'
  */
 export function getFixturePath(botName: string, step: string): string {
     const baseDir = './fixtures';
     const fs = require('fs');
-    const path = require('path');
+    const pathModule = require('path');
 
-    // List files in fixtures to find a match
     if (!fs.existsSync(baseDir)) return '';
 
     const files = fs.readdirSync(baseDir);
@@ -68,15 +82,17 @@ export function getFixturePath(botName: string, step: string): string {
     const match = files.find((f: string) => f.toLowerCase().startsWith(prefix));
 
     if (match) {
-        return path.join(baseDir, match);
+        return pathModule.join(baseDir, match);
     }
 
-    // Fallback search: just botName_type (legacy)
+    // Fallback search
     const legacyPrefix = `${botName}_`.toLowerCase();
-    const legacyMatch = files.find((f: string) => f.toLowerCase().startsWith(legacyPrefix) && f.toLowerCase().includes(step.toLowerCase()));
+    const legacyMatch = files.find((f: string) => 
+        f.toLowerCase().startsWith(legacyPrefix) && f.toLowerCase().includes(step.toLowerCase())
+    );
 
     if (legacyMatch) {
-        return path.join(baseDir, legacyMatch);
+        return pathModule.join(baseDir, legacyMatch);
     }
 
     return '';
