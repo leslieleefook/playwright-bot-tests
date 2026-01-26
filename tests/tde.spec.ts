@@ -1,61 +1,114 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
+import { 
+    clickTypebotButton, 
+    waitForTypebotReady, 
+    BUTTON_PATTERNS 
+} from '../utils/typebotHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/tde';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
 /**
- * Shadow-piercing selectors for Typebot web component.
- * Typebot renders inside <typebot-standard> with shadow DOM.
+ * Fills a text input in Typebot shadow DOM
  */
-const TYPEBOT = {
-    button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
-    textInput: 'typebot-standard >> input[type="text"], typebot-standard >> textarea, typebot-standard >> input.typebot-input',
-    emailInput: 'typebot-standard >> input[type="email"]',
-    text: (pattern: string) => `typebot-standard >> text=${pattern}`,
-};
+async function fillTypebotInput(page: any, text: string, type: 'text' | 'email' = 'text'): Promise<void> {
+    // Use evaluate to find and fill the input in shadow DOM
+    const filled = await page.evaluate((args: { text: string, type: string }) => {
+        const typebot = document.querySelector('typebot-standard');
+        if (!typebot) return false;
+        const shadow = (typebot as any).shadowRoot;
+        if (!shadow) return false;
+        
+        let input: HTMLInputElement | null = null;
+        if (args.type === 'email') {
+            input = shadow.querySelector('input[type="email"]') as HTMLInputElement;
+        } else {
+            input = shadow.querySelector('input[type="text"], textarea, input.typebot-input') as HTMLInputElement;
+        }
+        
+        if (!input) return false;
+        
+        // Check visibility
+        const style = window.getComputedStyle(input);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        
+        input.focus();
+        input.value = args.text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+    }, { text, type });
+    
+    if (!filled) {
+        throw new Error(`Could not find ${type} input in Typebot shadow DOM`);
+    }
+    console.log(`[TYPEBOT] Filled ${type} input: "${text}"`);
+}
+
+/**
+ * Waits for a text input to appear in Typebot shadow DOM
+ */
+async function waitForTypebotInput(page: any, type: 'text' | 'email' = 'text', timeout = 30000): Promise<void> {
+    await page.waitForFunction((inputType: string) => {
+        const typebot = document.querySelector('typebot-standard');
+        if (!typebot) return false;
+        const shadow = (typebot as any).shadowRoot;
+        if (!shadow) return false;
+        
+        let input: HTMLElement | null = null;
+        if (inputType === 'email') {
+            input = shadow.querySelector('input[type="email"]');
+        } else {
+            input = shadow.querySelector('input[type="text"], textarea, input.typebot-input');
+        }
+        
+        if (!input) return false;
+        const style = window.getComputedStyle(input);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+    }, type, { timeout });
+}
 
 test.describe('TDE Bot Interaction Flow', () => {
     test('should complete TDE flow and verify receipt', async ({ page }) => {
         console.log(`Navigating to TDE Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Wait for Typebot to load
-        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(1000); // Allow shadow DOM to render
+        // Wait for Typebot to be ready
+        await waitForTypebotReady(page, 40000);
 
-        // Initial prompt often asks if ready
-        console.log('Initiating flow...');
-        const startBtn = page.locator(TYPEBOT.button('Yes')).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await startBtn.click();
+        // Initial prompt asks if ready
+        console.log('Looking for Yes button...');
+        const startClicked = await clickTypebotButton(page, BUTTON_PATTERNS.consent, 40000);
+        if (startClicked) {
+            console.log('Clicked Yes button');
+            await page.waitForTimeout(2000);
+        }
 
         // 1. Name
-        console.log('Providing Name...');
-        const nameInput = page.locator(TYPEBOT.textInput).first();
-        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
-        await nameInput.fill('Leslie');
+        console.log('Waiting for name input...');
+        await waitForTypebotInput(page, 'text', 30000);
+        await fillTypebotInput(page, 'Leslie', 'text');
         await page.keyboard.press('Enter');
+        await page.waitForTimeout(2000);
 
         // 2. Email
-        console.log('Providing Email...');
-        const emailInput = page.locator(TYPEBOT.emailInput).first();
-        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
-        await emailInput.fill(BOT_EMAIL);
+        console.log('Waiting for email input...');
+        await waitForTypebotInput(page, 'email', 30000);
+        await fillTypebotInput(page, BOT_EMAIL, 'email');
         await page.keyboard.press('Enter');
+        await page.waitForTimeout(2000);
 
         // 3. Service Interest/Details
-        console.log('Providing Service Inquiry...');
-        await page.waitForTimeout(1000); // Wait for next input to appear
-        const inquiryInput = page.locator(TYPEBOT.textInput).first();
-        await inquiryInput.waitFor({ state: 'visible', timeout: 30000 });
-        await inquiryInput.fill('Inquiring about technical delivery excellence frameworks for cloud platforms.');
+        console.log('Waiting for inquiry input...');
+        await waitForTypebotInput(page, 'text', 30000);
+        await fillTypebotInput(page, 'Inquiring about technical delivery excellence frameworks for cloud platforms.', 'text');
         await page.keyboard.press('Enter');
 
-        // Verify Completion (on-page)
-        console.log('Verifying completion message...');
-        await page.waitForTimeout(5000); // Wait for submission
+        // Verify Completion
+        console.log('Verifying completion...');
+        await page.waitForTimeout(5000);
         console.log('TDE Bot UI stage complete.');
 
         // 4. Verify Email Receipt via IMAP
