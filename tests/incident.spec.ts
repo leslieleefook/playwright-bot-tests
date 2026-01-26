@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/incident';
@@ -11,12 +11,17 @@ test.describe('Incident Bot Interaction Flow', () => {
         console.log(`Navigating to Incident Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000);
+
         // Accept consent first (if present)
         console.log('Checking for consent button...');
-        const consentBtn = page.getByRole('button', { name: /Yes I consent|Yes!/i }).first();
-        if (await consentBtn.isVisible({ timeout: 10000 }).catch(() => false)) {
-            await consentBtn.click();
+        try {
+            await clickTypebotButton(page, 'Yes I consent|Yes!', 10000);
             await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No consent button found, continuing...');
         }
 
         // Upload Scene
@@ -25,9 +30,7 @@ test.describe('Incident Bot Interaction Flow', () => {
         if (scenePath) {
             await uploadToTypebot(page, scenePath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Next|Continue|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
         }
 
         // Upload Injury
@@ -36,9 +39,7 @@ test.describe('Incident Bot Interaction Flow', () => {
         if (injuryPath) {
             await uploadToTypebot(page, injuryPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Submit|Next|Continue|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Submit|Next|Continue|Skip|Send', 30000);
         }
 
         // Verify Completion

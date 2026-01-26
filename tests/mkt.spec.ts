@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
+import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/mkt';
@@ -10,34 +11,34 @@ test.describe('MKT Bot Interaction Flow', () => {
         console.log(`Navigating to MKT Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Helper to wait for and fill textbox
-        const fillTextbox = async (value: string) => {
-            const textbox = page.getByRole('textbox').first();
-            await textbox.waitFor({ state: 'visible', timeout: 30000 });
-            await textbox.fill(value);
-            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
-            await sendBtn.click();
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000);
+
+        // Helper to fill input and submit
+        const fillAndSubmit = async (value: string) => {
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send');
             await page.waitForTimeout(2000);
         };
 
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await startBtn.click();
+        await clickTypebotButton(page, 'Yes', 40000);
         await page.waitForTimeout(2000);
 
         // 1. Name Input
         console.log('Providing Name...');
-        await fillTextbox('Leslie');
+        await fillAndSubmit('Leslie');
 
         // 2. Email Input
         console.log('Providing Email...');
-        await fillTextbox(BOT_EMAIL);
+        await fillAndSubmit(BOT_EMAIL);
 
         // 3. Product Idea
         console.log('Providing Product Idea...');
-        await fillTextbox('Automated AI testing framework for conversion bots');
+        await fillAndSubmit('Automated AI testing framework for conversion bots');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/exam';
@@ -11,11 +11,13 @@ test.describe('Exam Bot Interaction Flow', () => {
         console.log(`Navigating to Exam Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000);
+
         // Accept consent first
         console.log('Accepting consent...');
-        const consentBtn = page.getByRole('button', { name: /Yes I consent/i }).first();
-        await consentBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await consentBtn.click();
+        await clickTypebotButton(page, 'Yes I consent', 40000);
         await page.waitForTimeout(2000);
 
         // Upload Quiz
@@ -24,9 +26,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (quizPath) {
             await uploadToTypebot(page, quizPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Next|Continue|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
         }
 
         // Upload Answers
@@ -35,9 +35,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (ansPath) {
             await uploadToTypebot(page, ansPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Next|Continue|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
         }
 
         // Upload Response 1
@@ -46,9 +44,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (res1Path) {
             await uploadToTypebot(page, res1Path);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Submit|Next|Continue|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Submit|Next|Continue|Skip|Send', 30000);
         }
 
         // Verify Completion

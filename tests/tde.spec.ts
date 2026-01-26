@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
+import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/tde';
@@ -10,36 +11,38 @@ test.describe('TDE Bot Interaction Flow', () => {
         console.log(`Navigating to TDE Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Helper to wait for and fill textbox
-        const fillTextbox = async (value: string) => {
-            const textbox = page.getByRole('textbox').first();
-            await textbox.waitFor({ state: 'visible', timeout: 30000 });
-            await textbox.fill(value);
-            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
-            await sendBtn.click();
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000);
+
+        // Helper to fill input and submit
+        const fillAndSubmit = async (value: string) => {
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send');
             await page.waitForTimeout(2000);
         };
 
         // TDE bot starts directly with name input (no Yes button)
         // 1. Name
         console.log('Providing Name...');
-        await fillTextbox('Leslie');
+        await fillAndSubmit('Leslie');
 
         // 2. Email
         console.log('Providing Email...');
-        await fillTextbox(BOT_EMAIL);
+        await fillAndSubmit(BOT_EMAIL);
 
         // 3. Company Name
         console.log('Providing Company Name...');
-        await fillTextbox('Incus Services');
+        await fillAndSubmit('Incus Services');
 
         // 4. Challenge/Problem
         console.log('Providing Challenge...');
-        await fillTextbox('Low awareness of AI and how to leverage it for business operations');
+        await fillAndSubmit('Low awareness of AI and how to leverage it for business operations');
 
         // 5. Industry
         console.log('Providing Industry...');
-        await fillTextbox('Technology');
+        await fillAndSubmit('Technology');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');
