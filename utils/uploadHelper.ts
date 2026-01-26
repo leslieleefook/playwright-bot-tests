@@ -26,73 +26,84 @@ export async function uploadFile(
 }
 
 /**
- * Shadow-piercing selectors for Typebot file uploads.
- * Typebot renders inside <typebot-standard> web component with shadow DOM.
- */
-const TYPEBOT_FILE_SELECTORS = {
-    // Primary: The actual file input (hidden)
-    fileInputById: 'typebot-standard >> input#dropzone-file',
-    // Fallback: Generic file input
-    fileInput: 'typebot-standard >> input[type="file"]',
-    // For clicking: The visible label/dropzone
-    uploadLabel: 'typebot-standard >> label:has(input[type="file"])',
-    // Alternative dropzone selector
-    uploadDropzone: 'typebot-standard >> .typebot-upload-input',
-};
-
-/**
  * Specifically for Typebot style uploads.
- * Uses shadow-piercing selectors to access elements inside <typebot-standard>.
+ * Uses evaluate() to access file input inside <typebot-standard> shadow DOM.
+ * 
+ * The >> selector syntax does NOT pierce shadow DOM in Playwright.
+ * We must use evaluate() to access shadow root directly.
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
-    console.log('[UPLOAD] Attempting Typebot upload with shadow-piercing selectors...');
+    const absolutePath = path.resolve(filePath);
+    console.log('[UPLOAD] Attempting Typebot shadow DOM upload...');
 
     try {
-        // Wait for Typebot to be ready
+        // Wait for Typebot web component to be in DOM
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
-        await page.waitForTimeout(1000); // Allow shadow DOM to render
+        await page.waitForTimeout(2000); // Allow shadow DOM to fully render
 
-        // Try the specific file input first (by ID)
-        const fileInputById = page.locator(TYPEBOT_FILE_SELECTORS.fileInputById);
-        if (await fileInputById.count() > 0) {
-            console.log('[UPLOAD] Found file input by ID (dropzone-file)');
-            await uploadFile(page, fileInputById, filePath, true);
+        // Method 1: Try to find file input inside shadow DOM using evaluate
+        const hasFileInput = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot?.shadowRoot) return false;
+            const input = typebot.shadowRoot.querySelector('input[type="file"]');
+            return !!input;
+        });
+
+        if (hasFileInput) {
+            console.log('[UPLOAD] Found file input in Typebot shadow DOM');
+            
+            // Get element handle to the file input
+            const fileInputHandle = await page.evaluateHandle(() => {
+                const typebot = document.querySelector('typebot-standard');
+                return typebot?.shadowRoot?.querySelector('input[type="file"]') as HTMLInputElement;
+            });
+
+            // setInputFiles works with ElementHandle
+            await (fileInputHandle as any).setInputFiles(absolutePath);
+            console.log('[UPLOAD] File uploaded via shadow DOM input');
+            await fileInputHandle.dispose();
             return;
         }
 
-        // Try generic file input selector
-        const fileInput = page.locator(TYPEBOT_FILE_SELECTORS.fileInput);
-        if (await fileInput.count() > 0) {
-            console.log('[UPLOAD] Found generic file input');
-            await uploadFile(page, fileInput, filePath, true);
+        // Method 2: Click the visible label/dropzone and use file chooser
+        const hasUploadLabel = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot?.shadowRoot) return false;
+            const label = typebot.shadowRoot.querySelector('label.typebot-upload-input, label[for="dropzone-file"]');
+            return !!label;
+        });
+
+        if (hasUploadLabel) {
+            console.log('[UPLOAD] Found upload label, using click + file chooser...');
+            
+            // Set up file chooser listener BEFORE clicking
+            const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 30000 });
+            
+            // Click the label via evaluate
+            await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                const label = typebot?.shadowRoot?.querySelector('label.typebot-upload-input, label[for="dropzone-file"]') as HTMLElement;
+                label?.click();
+            });
+            
+            const fileChooser = await fileChooserPromise;
+            await fileChooser.setFiles(absolutePath);
+            console.log('[UPLOAD] File uploaded via file chooser');
             return;
         }
 
-        // Fallback: Click the upload label/dropzone and use file chooser
-        console.log('[UPLOAD] No direct file input found, trying click-based upload...');
-        
-        const uploadLabel = page.locator(TYPEBOT_FILE_SELECTORS.uploadLabel);
-        const uploadDropzone = page.locator(TYPEBOT_FILE_SELECTORS.uploadDropzone);
-        
-        const clickTarget = await uploadLabel.count() > 0 ? uploadLabel : uploadDropzone;
-        
-        if (await clickTarget.count() > 0) {
-            console.log('[UPLOAD] Found upload zone, triggering file chooser...');
-            await uploadFile(page, clickTarget.first(), filePath, false);
-            return;
-        }
-
-        // Last resort: Try non-shadow selectors (for non-Typebot pages)
-        console.log('[UPLOAD] No Typebot upload elements found, trying standard selectors...');
+        // Method 3: Fallback for non-Typebot pages (standard file input)
+        console.log('[UPLOAD] No Typebot elements found, trying standard selectors...');
         const standardInput = page.locator('input[type="file"]');
         if (await standardInput.count() > 0) {
-            await uploadFile(page, standardInput.first(), filePath, true);
+            await standardInput.first().setInputFiles(absolutePath);
+            console.log('[UPLOAD] File uploaded via standard input');
             return;
         }
 
-        throw new Error('No file upload element found (tried shadow-piercing and standard selectors)');
+        throw new Error('No file upload element found in shadow DOM or standard DOM');
     } catch (err: any) {
-        console.error(`[UPLOAD] Failed during Typebot upload attempt: ${err.message}`);
+        console.error(`[UPLOAD] Upload failed: ${err.message}`);
         throw err;
     }
 }
