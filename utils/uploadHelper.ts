@@ -27,73 +27,126 @@ export async function uploadFile(
 
 /**
  * Specifically for Typebot style uploads.
- * Uses evaluate() to access file input inside <typebot-standard> shadow DOM.
  * 
- * The >> selector syntax does NOT pierce shadow DOM in Playwright.
- * We must use evaluate() to access shadow root directly.
+ * Typebot uses a web component with shadow DOM. We need multiple strategies:
+ * 1. Playwright's getByLabel() pierces shadow DOM for accessible elements
+ * 2. File chooser approach by clicking the dropzone
+ * 3. Direct shadow DOM access via evaluate()
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
     const absolutePath = path.resolve(filePath);
-    console.log('[UPLOAD] Attempting Typebot shadow DOM upload...');
+    console.log('[UPLOAD] Attempting Typebot upload...');
 
     try {
-        // Wait for Typebot web component to be in DOM
+        // Wait for Typebot web component to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
-        await page.waitForTimeout(2000); // Allow shadow DOM to fully render
-
-        // Method 1: Try to find file input inside shadow DOM using evaluate
-        const hasFileInput = await page.evaluate(() => {
+        await page.waitForTimeout(3000); // Allow shadow DOM and chat to fully render
+        
+        // Debug: Check shadow DOM mode
+        const shadowInfo = await page.evaluate(() => {
             const typebot = document.querySelector('typebot-standard');
-            if (!typebot?.shadowRoot) return false;
-            const input = typebot.shadowRoot.querySelector('input[type="file"]');
-            return !!input;
+            if (!typebot) return { exists: false };
+            const shadow = (typebot as any).shadowRoot;
+            return {
+                exists: true,
+                hasShadow: !!shadow,
+                mode: shadow?.mode || 'no-shadowroot',
+                innerHTML: typebot.innerHTML?.substring(0, 200) || ''
+            };
         });
+        console.log('[UPLOAD] Shadow DOM info:', JSON.stringify(shadowInfo));
 
-        if (hasFileInput) {
-            console.log('[UPLOAD] Found file input in Typebot shadow DOM');
+        // Method 1: Use Playwright's getByRole which pierces open shadow DOM
+        console.log('[UPLOAD] Trying getByRole for file input...');
+        const fileInputByRole = page.getByRole('textbox', { name: /file|upload|drop/i });
+        if (await fileInputByRole.count() > 0) {
+            console.log('[UPLOAD] Found file input via getByRole');
+            await fileInputByRole.setInputFiles(absolutePath);
+            console.log('[UPLOAD] File uploaded via getByRole');
+            return;
+        }
+
+        // Method 2: Use file chooser approach with visible upload area
+        // Playwright's text/role selectors pierce shadow DOM
+        console.log('[UPLOAD] Trying file chooser approach...');
+        
+        // Look for upload-related text or buttons that pierce shadow DOM
+        const uploadTriggers = [
+            page.getByText(/upload|drop.*file|browse|choose.*file/i).first(),
+            page.getByRole('button', { name: /upload|browse|choose/i }).first(),
+            page.locator('[class*="upload"]').first(),
+            page.locator('[class*="dropzone"]').first(),
+            page.locator('label[for*="file"]').first(),
+        ];
+
+        for (const trigger of uploadTriggers) {
+            if (await trigger.count() > 0 && await trigger.isVisible().catch(() => false)) {
+                console.log('[UPLOAD] Found upload trigger element, setting up file chooser...');
+                try {
+                    const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 15000 });
+                    await trigger.click({ timeout: 5000 });
+                    const fileChooser = await fileChooserPromise;
+                    await fileChooser.setFiles(absolutePath);
+                    console.log('[UPLOAD] File uploaded via file chooser');
+                    return;
+                } catch (e) {
+                    console.log('[UPLOAD] File chooser approach failed for this trigger, trying next...');
+                    continue;
+                }
+            }
+        }
+
+        // Method 3: Direct shadow DOM access (works if shadow is open)
+        if (shadowInfo.hasShadow) {
+            console.log('[UPLOAD] Trying direct shadow DOM access...');
             
-            // Get element handle to the file input
             const fileInputHandle = await page.evaluateHandle(() => {
                 const typebot = document.querySelector('typebot-standard');
-                return typebot?.shadowRoot?.querySelector('input[type="file"]') as HTMLInputElement;
+                const shadow = (typebot as any)?.shadowRoot;
+                if (!shadow) return null;
+                // Try multiple selectors
+                return shadow.querySelector('input[type="file"]') ||
+                       shadow.querySelector('input#dropzone-file') ||
+                       shadow.querySelector('[id*="file"]');
             });
 
-            // setInputFiles works with ElementHandle
-            await (fileInputHandle as any).setInputFiles(absolutePath);
-            console.log('[UPLOAD] File uploaded via shadow DOM input');
-            await fileInputHandle.dispose();
-            return;
-        }
-
-        // Method 2: Click the visible label/dropzone and use file chooser
-        const hasUploadLabel = await page.evaluate(() => {
-            const typebot = document.querySelector('typebot-standard');
-            if (!typebot?.shadowRoot) return false;
-            const label = typebot.shadowRoot.querySelector('label.typebot-upload-input, label[for="dropzone-file"]');
-            return !!label;
-        });
-
-        if (hasUploadLabel) {
-            console.log('[UPLOAD] Found upload label, using click + file chooser...');
+            const isValid = await fileInputHandle.evaluate((el: any) => !!el);
+            if (isValid) {
+                console.log('[UPLOAD] Found file input in shadow DOM');
+                await (fileInputHandle as any).setInputFiles(absolutePath);
+                console.log('[UPLOAD] File uploaded via shadow DOM');
+                await fileInputHandle.dispose();
+                return;
+            }
             
-            // Set up file chooser listener BEFORE clicking
-            const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 30000 });
-            
-            // Click the label via evaluate
-            await page.evaluate(() => {
+            // Try clicking label in shadow DOM
+            const clicked = await page.evaluate(() => {
                 const typebot = document.querySelector('typebot-standard');
-                const label = typebot?.shadowRoot?.querySelector('label.typebot-upload-input, label[for="dropzone-file"]') as HTMLElement;
-                label?.click();
+                const shadow = (typebot as any)?.shadowRoot;
+                if (!shadow) return false;
+                const label = shadow.querySelector('label[for*="file"], label[class*="upload"]') as HTMLElement;
+                if (label) {
+                    label.click();
+                    return true;
+                }
+                return false;
             });
-            
-            const fileChooser = await fileChooserPromise;
-            await fileChooser.setFiles(absolutePath);
-            console.log('[UPLOAD] File uploaded via file chooser');
-            return;
+
+            if (clicked) {
+                console.log('[UPLOAD] Clicked shadow DOM label, waiting for file chooser...');
+                try {
+                    const fileChooser = await page.waitForEvent('filechooser', { timeout: 10000 });
+                    await fileChooser.setFiles(absolutePath);
+                    console.log('[UPLOAD] File uploaded via shadow label click');
+                    return;
+                } catch (e) {
+                    console.log('[UPLOAD] File chooser not triggered by shadow label');
+                }
+            }
         }
 
-        // Method 3: Fallback for non-Typebot pages (standard file input)
-        console.log('[UPLOAD] No Typebot elements found, trying standard selectors...');
+        // Method 4: Fallback - any file input on page
+        console.log('[UPLOAD] Trying standard file input fallback...');
         const standardInput = page.locator('input[type="file"]');
         if (await standardInput.count() > 0) {
             await standardInput.first().setInputFiles(absolutePath);
@@ -101,7 +154,7 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
             return;
         }
 
-        throw new Error('No file upload element found in shadow DOM or standard DOM');
+        throw new Error('No file upload element found. Shadow info: ' + JSON.stringify(shadowInfo));
     } catch (err: any) {
         console.error(`[UPLOAD] Upload failed: ${err.message}`);
         throw err;
