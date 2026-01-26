@@ -45,6 +45,8 @@ jobs:
               env:
                   TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
                   TEST_EMAIL_PASSWORD: ${{ secrets.TEST_EMAIL_PASSWORD }}
+                  IMAP_USER: ${{ secrets.IMAP_USER }}
+                  IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
                   IMAP_HOST: ${{ secrets.IMAP_HOST }}
                   IMAP_PORT: ${{ secrets.IMAP_PORT }}
                   SMTP_HOST: ${{ secrets.SMTP_HOST }}
