@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/compliance';
@@ -18,15 +18,16 @@ test.describe('Compliance Bot Interaction Flow', () => {
         // Accept consent first
         console.log('Accepting consent...');
         await clickTypebotButton(page, 'Yes I consent', 40000);
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(3000);
 
         // 1. Upload ID
         console.log('Uploading Compliance ID...');
         const idPath = getFixturePath('compliance', 'id');
         if (idPath) {
             await uploadToTypebot(page, idPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Continue|Next|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance (Typebot often auto-advances after upload)
+            await waitForTypebotButtonOrAdvance(page, 'Continue|Next|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // 2. Upload Job Letter
@@ -34,8 +35,9 @@ test.describe('Compliance Bot Interaction Flow', () => {
         const jobPath = getFixturePath('compliance', 'jobletter');
         if (jobPath) {
             await uploadToTypebot(page, jobPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Continue|Next|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Continue|Next|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // 3. Upload Proof of Address
@@ -43,8 +45,9 @@ test.describe('Compliance Bot Interaction Flow', () => {
         const addressPath = getFixturePath('compliance', 'proofofaddress');
         if (addressPath) {
             await uploadToTypebot(page, addressPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Continue|Next|Submit|Finish|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Continue|Next|Submit|Finish|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Verify Completion

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/exam';
@@ -13,20 +13,21 @@ test.describe('Exam Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(3000);
 
         // Accept consent first
         console.log('Accepting consent...');
         await clickTypebotButton(page, 'Yes I consent', 40000);
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(3000);
 
         // Upload Quiz
         console.log('Uploading Quiz...');
         const quizPath = getFixturePath('exam', 'quizz');
         if (quizPath) {
             await uploadToTypebot(page, quizPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Upload Answers
@@ -34,8 +35,9 @@ test.describe('Exam Bot Interaction Flow', () => {
         const ansPath = getFixturePath('exam', 'answers');
         if (ansPath) {
             await uploadToTypebot(page, ansPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Upload Response 1
@@ -43,8 +45,9 @@ test.describe('Exam Bot Interaction Flow', () => {
         const res1Path = getFixturePath('exam', 'response1');
         if (res1Path) {
             await uploadToTypebot(page, res1Path);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Submit|Next|Continue|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Submit|Next|Continue|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Verify Completion

@@ -13,36 +13,49 @@ test.describe('TDE Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(2000);
+        
+        // Wait for initial typing animation to complete
+        console.log('[TDE] Waiting for initial typing animation...');
+        await page.waitForTimeout(4000);
 
-        // Helper to fill input and submit
-        const fillAndSubmit = async (value: string) => {
-            await fillTypebotInput(page, value);
-            await page.waitForTimeout(500);
-            await clickTypebotButton(page, 'Send');
+        // Helper to fill input and submit (with extended waits for typing animations)
+        const fillAndSubmit = async (value: string, fieldName: string) => {
+            console.log(`[TDE] Filling ${fieldName}: ${value.substring(0, 20)}...`);
+            
+            // Wait for any typing animation to complete before filling
             await page.waitForTimeout(2000);
+            
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(1000);
+            
+            // Click Send button - may be text or icon
+            // The improved clickTypebotButton handles icon-only buttons
+            await clickTypebotButton(page, 'Send', 15000);
+            
+            // Wait for bot to process and show next question
+            await page.waitForTimeout(3000);
         };
 
         // TDE bot starts directly with name input (no Yes button)
         // 1. Name
         console.log('Providing Name...');
-        await fillAndSubmit('Leslie');
+        await fillAndSubmit('Leslie', 'Name');
 
         // 2. Email
         console.log('Providing Email...');
-        await fillAndSubmit(BOT_EMAIL);
+        await fillAndSubmit(BOT_EMAIL, 'Email');
 
         // 3. Company Name
         console.log('Providing Company Name...');
-        await fillAndSubmit('Incus Services');
+        await fillAndSubmit('Incus Services', 'Company');
 
         // 4. Challenge/Problem
         console.log('Providing Challenge...');
-        await fillAndSubmit('Low awareness of AI and how to leverage it for business operations');
+        await fillAndSubmit('Low awareness of AI and how to leverage it for business operations', 'Challenge');
 
         // 5. Industry
         console.log('Providing Industry...');
-        await fillAndSubmit('Technology');
+        await fillAndSubmit('Technology', 'Industry');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');

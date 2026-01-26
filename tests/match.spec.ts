@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/match';
@@ -13,13 +13,13 @@ test.describe('Match Bot Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(3000);
 
         // Accept consent first (if present)
         console.log('Checking for consent button...');
         try {
-            await clickTypebotButton(page, 'Yes I consent|Yes!', 10000);
-            await page.waitForTimeout(2000);
+            await clickTypebotButton(page, 'Yes I consent|Yes!', 15000);
+            await page.waitForTimeout(3000);
         } catch (e) {
             console.log('No consent button found, continuing...');
         }
@@ -29,8 +29,9 @@ test.describe('Match Bot Flow', () => {
         const jdPath = getFixturePath('match', 'jd');
         if (jdPath) {
             await uploadToTypebot(page, jdPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Next|Continue|Skip|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Upload Resume
@@ -38,8 +39,9 @@ test.describe('Match Bot Flow', () => {
         const resPath = getFixturePath('match', 'resume1');
         if (resPath) {
             await uploadToTypebot(page, resPath);
-            await page.waitForTimeout(3000);
-            await clickTypebotButton(page, 'Analyze|Submit|Next|Continue|Send', 30000);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Analyze|Submit|Next|Continue|Send', 15000);
+            await page.waitForTimeout(2000);
         }
 
         // Verify Completion
