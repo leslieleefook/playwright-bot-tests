@@ -255,11 +255,13 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
 /**
  * Helper to fill a text input in Typebot's shadow DOM.
  * Handles the shadow DOM boundary using evaluate().
+ * Uses React-compatible state updates with InputEvent and native setter.
  */
 export async function fillTypebotInput(page: Page, value: string, timeout: number = 30000): Promise<void> {
     console.log(`[TYPEBOT] Filling input with: ${value.substring(0, 20)}...`);
     
     // Wait for input to appear in shadow DOM
+    const waitStart = Date.now();
     await page.waitForFunction(() => {
         const typebot = document.querySelector('typebot-standard');
         if (!typebot) return false;
@@ -268,21 +270,81 @@ export async function fillTypebotInput(page: Page, value: string, timeout: numbe
         const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])');
         return !!input;
     }, { timeout });
+    console.log(`[TYPEBOT] Input element found after ${Date.now() - waitStart}ms`);
 
-    // Fill the input via evaluate
-    await page.evaluate((val) => {
+    // Get element info for debugging
+    const inputInfo = await page.evaluate(() => {
         const typebot = document.querySelector('typebot-standard');
         const shadow = (typebot as any)?.shadowRoot;
-        if (!shadow) throw new Error('No shadow root');
-        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])') as HTMLInputElement;
-        if (!input) throw new Error('No input found');
-        input.focus();
-        input.value = val;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!shadow) return { error: 'no-shadow' };
+        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])') as HTMLInputElement | HTMLTextAreaElement;
+        if (!input) return { error: 'no-input' };
+        return {
+            tagName: input.tagName,
+            type: (input as HTMLInputElement).type || 'textarea',
+            id: input.id,
+            name: input.name,
+            placeholder: input.placeholder
+        };
+    });
+    console.log(`[TYPEBOT] Input element: ${JSON.stringify(inputInfo)}`);
+
+    // Fill the input via evaluate using React-compatible approach
+    const fillResult = await page.evaluate((val) => {
+        const typebot = document.querySelector('typebot-standard');
+        const shadow = (typebot as any)?.shadowRoot;
+        if (!shadow) return { success: false, error: 'No shadow root' };
+        
+        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])') as HTMLInputElement | HTMLTextAreaElement;
+        if (!input) return { success: false, error: 'No input found' };
+        
+        try {
+            // Focus first
+            input.focus();
+            
+            // Clear existing value
+            input.value = '';
+            
+            // Use native setter for React compatibility
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                input.tagName === 'TEXTAREA' 
+                    ? window.HTMLTextAreaElement.prototype 
+                    : window.HTMLInputElement.prototype, 
+                'value'
+            )?.set;
+            
+            if (nativeInputValueSetter) {
+                nativeInputValueSetter.call(input, val);
+            } else {
+                input.value = val;
+            }
+            
+            // Dispatch InputEvent (React 16+ needs this)
+            const inputEvent = new InputEvent('input', {
+                bubbles: true,
+                cancelable: true,
+                inputType: 'insertText',
+                data: val
+            });
+            input.dispatchEvent(inputEvent);
+            
+            // Also dispatch change event for completeness
+            const changeEvent = new Event('change', { bubbles: true, cancelable: true });
+            input.dispatchEvent(changeEvent);
+            
+            // Verify value was set
+            return { success: true, finalValue: input.value.substring(0, 30) };
+        } catch (err: any) {
+            return { success: false, error: err.message };
+        }
     }, value);
     
-    console.log('[TYPEBOT] Input filled');
+    if (!fillResult.success) {
+        console.error(`[TYPEBOT] Fill failed: ${fillResult.error}`);
+        throw new Error(`Failed to fill input: ${fillResult.error}`);
+    }
+    
+    console.log(`[TYPEBOT] Input filled successfully, value starts with: "${fillResult.finalValue}..."`);
 }
 
 /**
