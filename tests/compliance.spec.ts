@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/compliance';
@@ -11,11 +11,13 @@ test.describe('Compliance Bot Interaction Flow', () => {
         console.log(`Navigating to Compliance Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000);
+
         // Accept consent first
         console.log('Accepting consent...');
-        const consentBtn = page.getByRole('button', { name: /Yes I consent/i }).first();
-        await consentBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await consentBtn.click();
+        await clickTypebotButton(page, 'Yes I consent', 40000);
         await page.waitForTimeout(2000);
 
         // 1. Upload ID
@@ -24,9 +26,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (idPath) {
             await uploadToTypebot(page, idPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Continue|Next|Skip|Send', 30000);
         }
 
         // 2. Upload Job Letter
@@ -35,9 +35,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (jobPath) {
             await uploadToTypebot(page, jobPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Continue|Next|Skip|Send', 30000);
         }
 
         // 3. Upload Proof of Address
@@ -46,9 +44,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (addressPath) {
             await uploadToTypebot(page, addressPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next|Submit|Finish|Skip|Send/i }).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            await clickTypebotButton(page, 'Continue|Next|Submit|Finish|Skip|Send', 30000);
         }
 
         // Verify Completion

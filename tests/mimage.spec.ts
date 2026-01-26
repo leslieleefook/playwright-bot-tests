@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/mimage';
@@ -11,30 +11,57 @@ test.describe('Mimage Bot Interaction Flow', () => {
         console.log(`Navigating to Mimage Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Accept consent first
-        console.log('Accepting consent...');
-        const consentBtn = page.getByRole('button', { name: /Yes I consent/i }).first();
-        await consentBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await consentBtn.click();
-        await page.waitForTimeout(2000);
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000); // Allow shadow DOM to render
 
-        // Upload Image
+        // First, initiate the flow - the bot may need a start button click
+        console.log('Initiating flow...');
+        try {
+            await clickTypebotButton(page, 'Start|Begin|Upload|Continue|Yes', 15000);
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No start button found, bot may start directly with upload...');
+        }
+
+        // Provide Name if asked
+        console.log('Providing Name...');
+        try {
+            await fillTypebotInput(page, 'Leslie', 10000);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send', 5000);
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No name input, continuing...');
+        }
+
+        // Provide Email if asked
+        console.log('Providing Email...');
+        try {
+            await fillTypebotInput(page, BOT_EMAIL, 10000);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send', 5000);
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No email input, continuing...');
+        }
+
+        // Upload Image - wait for upload step to appear
         console.log('Uploading image for processing...');
-        const imgPath = getFixturePath('mimage', 'image');
-        if (imgPath) {
-            await uploadToTypebot(page, imgPath);
+        const path = getFixturePath('mimage', 'image');
+        if (path) {
+            await uploadToTypebot(page, path);
             await page.waitForTimeout(3000);
-            
-            // Wait for and click next/submit button
-            const nextBtn = page.getByRole('button', { name: /Continue|Skip|Submit|Send/i }).first();
-            if (await nextBtn.isVisible({ timeout: 10000 }).catch(() => false)) {
-                await nextBtn.click();
+            try {
+                await clickTypebotButton(page, 'Process|Submit|Continue|Next|Send', 30000);
+            } catch (e) {
+                console.log('No submit button after upload, continuing...');
             }
         }
 
         // Verify Completion
         console.log('Verifying image processing completion...');
-        await page.waitForTimeout(10000); // Give time for processing
+        await page.waitForTimeout(10000);
         console.log('Mimage Bot UI stage complete.');
 
         // Verify Email

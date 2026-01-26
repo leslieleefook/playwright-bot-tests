@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/claims';
@@ -11,33 +11,34 @@ test.describe('Claims Bot Interaction Flow', () => {
         console.log(`Navigating to Claims Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(2000); // Allow shadow DOM to fully render
+
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await startBtn.click();
+        await clickTypebotButton(page, 'Yes', 40000);
+        await page.waitForTimeout(2000);
 
-        // Helper to wait for and fill textbox
-        const fillTextbox = async (value: string) => {
-            const textbox = page.getByRole('textbox').first();
-            await textbox.waitFor({ state: 'visible', timeout: 30000 });
-            await textbox.fill(value);
-            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
-            await sendBtn.click();
+        // Helper to fill input and submit
+        const fillAndSubmit = async (value: string) => {
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send');
             await page.waitForTimeout(2000); // Wait for bot response
         };
 
         // 1. Name
         console.log('Providing Name...');
-        await fillTextbox('Leslie');
+        await fillAndSubmit('Leslie');
 
         // 2. Email
         console.log('Providing Email...');
-        await fillTextbox(BOT_EMAIL);
+        await fillAndSubmit(BOT_EMAIL);
 
         // 3. Claims Details
         console.log('Providing Claims Details...');
-        await fillTextbox('Reporting an issue with a recent service interaction for operational verification.');
+        await fillAndSubmit('Reporting an issue with a recent service interaction for operational verification.');
 
         // 4. File Upload (optional if exist in fixtures)
         console.log('Checking for claim image upload...');
@@ -45,9 +46,10 @@ test.describe('Claims Bot Interaction Flow', () => {
         if (imgPath) {
             await uploadToTypebot(page, imgPath);
             await page.waitForTimeout(5000);
-            const nextBtn = page.getByRole('button', { name: /Continue|Next|Submit/i }).first();
-            if (await nextBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-                await nextBtn.click();
+            try {
+                await clickTypebotButton(page, 'Continue|Next|Submit', 5000);
+            } catch (e) {
+                console.log('No submit button after upload, continuing...');
             }
         }
 

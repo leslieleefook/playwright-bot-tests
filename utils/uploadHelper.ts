@@ -27,24 +27,73 @@ export async function uploadFile(
 
 /**
  * Specifically for Typebot style uploads - handles shadow DOM.
+ * 
+ * IMPORTANT: Typebot renders inside a web component with shadow DOM.
+ * The >> selector syntax pierces shadow DOM boundaries.
+ * .locator() chain does NOT pierce shadow DOM - you must use >> at the start.
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
     const absolutePath = path.resolve(filePath);
     console.log(`[UPLOAD] Attempting Typebot upload: ${absolutePath}`);
 
     try {
-        // Typebot uses shadow DOM - the file input is inside typebot-standard shadow root
-        // Use Playwright's built-in shadow DOM piercing with >>
-        const shadowInput = page.locator('typebot-standard').locator('#dropzone-file');
+        // Wait for Typebot to be present
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
         
-        // Check if shadow DOM input exists
-        if (await shadowInput.count() > 0) {
-            console.log('[UPLOAD] Found shadow DOM file input');
-            await shadowInput.setInputFiles(absolutePath);
+        // Wait for shadow DOM content to render (upload elements may take time to appear in flow)
+        console.log('[UPLOAD] Waiting for upload elements in shadow DOM...');
+        await page.waitForFunction(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            // Look for file input or upload-related elements
+            return !!(shadow.querySelector('input[type="file"]') || 
+                     shadow.querySelector('#dropzone-file') ||
+                     shadow.querySelector('[class*="dropzone"]'));
+        }, { timeout: 60000 });
+
+        // Method 1: Direct shadow DOM access via JavaScript (most reliable)
+        console.log('[UPLOAD] Using direct shadow DOM access...');
+        const uploaded = await page.evaluate(async (filePath) => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return { success: false, reason: 'no-typebot' };
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return { success: false, reason: 'no-shadow' };
+            
+            const fileInput = shadow.querySelector('input[type="file"]') || 
+                             shadow.querySelector('#dropzone-file');
+            if (!fileInput) return { success: false, reason: 'no-input' };
+            
+            return { success: true, inputFound: true };
+        }, absolutePath);
+
+        if (uploaded.success) {
+            // Get the file input handle and set files
+            const fileInputHandle = await page.evaluateHandle(() => {
+                const typebot = document.querySelector('typebot-standard');
+                const shadow = (typebot as any)?.shadowRoot;
+                return shadow?.querySelector('input[type="file"]') || shadow?.querySelector('#dropzone-file');
+            });
+            
+            await (fileInputHandle as any).setInputFiles(absolutePath);
+            console.log('[UPLOAD] File uploaded via shadow DOM');
+            await fileInputHandle.dispose();
             return;
         }
 
-        // Fallback: try regular file input
+        console.log(`[UPLOAD] Shadow DOM check result: ${JSON.stringify(uploaded)}`);
+
+        // Method 2: Try Playwright's >> syntax for shadow-piercing
+        // Note: >> only works if shadow DOM is open mode
+        const shadowInput = page.locator('typebot-standard >> input[type="file"]');
+        if (await shadowInput.count() > 0) {
+            console.log('[UPLOAD] Found input via >> selector');
+            await shadowInput.first().setInputFiles(absolutePath);
+            return;
+        }
+
+        // Method 3: Fallback to regular file inputs outside shadow DOM
         const regularInput = page.locator('input[type="file"]');
         if (await regularInput.count() > 0) {
             console.log('[UPLOAD] Found regular file input');
@@ -52,18 +101,85 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
             return;
         }
 
-        // Fallback: click upload zone and use file chooser
-        console.log('[UPLOAD] Using file chooser fallback');
-        const uploadZone = page.locator('text=Click to upload').first();
-        const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 30000 });
-        await uploadZone.click();
-        const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(absolutePath);
+        throw new Error('No file upload element found in shadow DOM or page');
 
     } catch (err: any) {
         console.error(`[UPLOAD] Failed: ${err.message}`);
         throw err;
     }
+}
+
+/**
+ * Helper to fill a text input in Typebot's shadow DOM.
+ * Handles the shadow DOM boundary using evaluate().
+ */
+export async function fillTypebotInput(page: Page, value: string, timeout: number = 30000): Promise<void> {
+    console.log(`[TYPEBOT] Filling input with: ${value.substring(0, 20)}...`);
+    
+    // Wait for input to appear in shadow DOM
+    await page.waitForFunction(() => {
+        const typebot = document.querySelector('typebot-standard');
+        if (!typebot) return false;
+        const shadow = (typebot as any).shadowRoot;
+        if (!shadow) return false;
+        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])');
+        return !!input;
+    }, { timeout });
+
+    // Fill the input via evaluate
+    await page.evaluate((val) => {
+        const typebot = document.querySelector('typebot-standard');
+        const shadow = (typebot as any)?.shadowRoot;
+        if (!shadow) throw new Error('No shadow root');
+        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])') as HTMLInputElement;
+        if (!input) throw new Error('No input found');
+        input.focus();
+        input.value = val;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }, value);
+    
+    console.log('[TYPEBOT] Input filled');
+}
+
+/**
+ * Helper to click a button in Typebot's shadow DOM by text pattern.
+ */
+export async function clickTypebotButton(page: Page, pattern: RegExp | string, timeout: number = 30000): Promise<void> {
+    const patternStr = pattern instanceof RegExp ? pattern.source : pattern;
+    console.log(`[TYPEBOT] Clicking button matching: ${patternStr}`);
+    
+    // Wait for button to appear
+    await page.waitForFunction((pat) => {
+        const typebot = document.querySelector('typebot-standard');
+        if (!typebot) return false;
+        const shadow = (typebot as any).shadowRoot;
+        if (!shadow) return false;
+        const buttons = shadow.querySelectorAll('button');
+        const regex = new RegExp(pat, 'i');
+        for (const btn of buttons) {
+            if (regex.test(btn.textContent || '')) return true;
+        }
+        return false;
+    }, patternStr, { timeout });
+
+    // Click the button
+    await page.evaluate((pat) => {
+        const typebot = document.querySelector('typebot-standard');
+        const shadow = (typebot as any)?.shadowRoot;
+        if (!shadow) throw new Error('No shadow root');
+        const buttons = shadow.querySelectorAll('button');
+        const regex = new RegExp(pat, 'i');
+        for (const btn of buttons) {
+            if (regex.test(btn.textContent || '')) {
+                (btn as HTMLButtonElement).click();
+                return;
+            }
+        }
+        throw new Error('Button not found');
+    }, patternStr);
+    
+    console.log('[TYPEBOT] Button clicked');
 }
 
 /**
