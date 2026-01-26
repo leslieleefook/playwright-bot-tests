@@ -6,10 +6,23 @@ import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 const BOT_URL = 'https://bot.incusservices.com/exam';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
+/**
+ * Shadow-piercing selectors for Typebot web component.
+ * Typebot renders inside <typebot-standard> with shadow DOM.
+ */
+const TYPEBOT = {
+    button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
+    text: (pattern: string) => `typebot-standard >> text=${pattern}`,
+};
+
 test.describe('Exam Bot Interaction Flow', () => {
     test('should trigger exam grade email and verify receipt', async ({ page }) => {
         console.log(`Navigating to Exam Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
+
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(1000); // Allow shadow DOM to render
 
         // Upload Quiz
         console.log('Uploading Quiz...');
@@ -17,7 +30,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (quizPath) {
             await uploadToTypebot(page, quizPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Next|Continue/i }).first();
+            const next = page.locator(TYPEBOT.button('Next|Continue')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
@@ -28,7 +41,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (ansPath) {
             await uploadToTypebot(page, ansPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Next|Continue/i }).first();
+            const next = page.locator(TYPEBOT.button('Next|Continue')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
@@ -39,7 +52,7 @@ test.describe('Exam Bot Interaction Flow', () => {
         if (res1Path) {
             await uploadToTypebot(page, res1Path);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Submit|Next|Continue/i }).first();
+            const next = page.locator(TYPEBOT.button('Submit|Next|Continue')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }

@@ -6,14 +6,27 @@ import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 const BOT_URL = 'https://bot.incusservices.com/compliance';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
+/**
+ * Shadow-piercing selectors for Typebot web component.
+ * Typebot renders inside <typebot-standard> with shadow DOM.
+ */
+const TYPEBOT = {
+    button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
+    text: (pattern: string) => `typebot-standard >> text=${pattern}`,
+};
+
 test.describe('Compliance Bot Interaction Flow', () => {
     test('should trigger compliance email and verify multi-file receipt', async ({ page }) => {
         console.log(`Navigating to Compliance Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(1000); // Allow shadow DOM to render
+
         // Start
         console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Start|Yes/i }).first();
+        const startBtn = page.locator(TYPEBOT.button('Start|Yes')).first();
         await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
@@ -23,7 +36,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (idPath) {
             await uploadToTypebot(page, idPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next/i }).first();
+            const next = page.locator(TYPEBOT.button('Continue|Next')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
@@ -34,7 +47,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (jobPath) {
             await uploadToTypebot(page, jobPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next/i }).first();
+            const next = page.locator(TYPEBOT.button('Continue|Next')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
@@ -45,7 +58,7 @@ test.describe('Compliance Bot Interaction Flow', () => {
         if (addressPath) {
             await uploadToTypebot(page, addressPath);
             await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next|Submit|Finish/i }).first();
+            const next = page.locator(TYPEBOT.button('Continue|Next|Submit|Finish')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }

@@ -6,38 +6,53 @@ import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 const BOT_URL = 'https://bot.incusservices.com/claims';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
+/**
+ * Shadow-piercing selectors for Typebot web component.
+ * Typebot renders inside <typebot-standard> with shadow DOM.
+ */
+const TYPEBOT = {
+    button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
+    textInput: 'typebot-standard >> input[type="text"], typebot-standard >> textarea, typebot-standard >> input.typebot-input',
+    emailInput: 'typebot-standard >> input[type="email"]',
+    text: (pattern: string) => `typebot-standard >> text=${pattern}`,
+};
+
 test.describe('Claims Bot Interaction Flow', () => {
     test('should complete claims flow and verify receipt', async ({ page }) => {
         console.log(`Navigating to Claims Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(1000); // Allow shadow DOM to render
+
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Yes/i }).first();
+        const startBtn = page.locator(TYPEBOT.button('Yes')).first();
         await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
-        // Helper to wait for and fill textbox
-        const fillTextbox = async (value: string) => {
-            const textbox = page.getByRole('textbox').first();
-            await textbox.waitFor({ state: 'visible', timeout: 30000 });
-            await textbox.fill(value);
-            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
-            await sendBtn.click();
-            await page.waitForTimeout(2000); // Wait for bot response
-        };
-
         // 1. Name
         console.log('Providing Name...');
-        await fillTextbox('Leslie');
+        const nameInput = page.locator(TYPEBOT.textInput).first();
+        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
+        await nameInput.fill('Leslie');
+        await page.keyboard.press('Enter');
 
         // 2. Email
         console.log('Providing Email...');
-        await fillTextbox(BOT_EMAIL);
+        const emailInput = page.locator(TYPEBOT.emailInput).first();
+        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
+        await emailInput.fill(BOT_EMAIL);
+        await page.keyboard.press('Enter');
 
         // 3. Claims Details
         console.log('Providing Claims Details...');
-        await fillTextbox('Reporting an issue with a recent service interaction for operational verification.');
+        await page.waitForTimeout(1000); // Wait for next input to appear
+        const detailsInput = page.locator(TYPEBOT.textInput).first();
+        await detailsInput.waitFor({ state: 'visible', timeout: 30000 });
+        await detailsInput.fill('Reporting an issue with a recent service interaction for operational verification.');
+        await page.keyboard.press('Enter');
 
         // 4. File Upload (optional if exist in fixtures)
         console.log('Checking for claim image upload...');
@@ -45,8 +60,8 @@ test.describe('Claims Bot Interaction Flow', () => {
         if (imgPath) {
             await uploadToTypebot(page, imgPath);
             await page.waitForTimeout(5000);
-            const nextBtn = page.getByRole('button', { name: /Continue|Next|Submit/i }).first();
-            if (await nextBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+            const nextBtn = page.locator(TYPEBOT.button('Continue|Next')).first();
+            if (await nextBtn.isVisible()) {
                 await nextBtn.click();
             }
         }

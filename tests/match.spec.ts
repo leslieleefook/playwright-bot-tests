@@ -6,10 +6,23 @@ import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 const BOT_URL = 'https://bot.incusservices.com/match';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
+/**
+ * Shadow-piercing selectors for Typebot web component.
+ * Typebot renders inside <typebot-standard> with shadow DOM.
+ */
+const TYPEBOT = {
+    button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
+    text: (pattern: string) => `typebot-standard >> text=${pattern}`,
+};
+
 test.describe('Match Bot Flow', () => {
     test('should trigger job match result email', async ({ page }) => {
         console.log(`Navigating to Match Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
+
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        await page.waitForTimeout(1000); // Allow shadow DOM to render
 
         // Upload JD
         console.log('Uploading Job Description...');
@@ -17,7 +30,7 @@ test.describe('Match Bot Flow', () => {
         if (jdPath) {
             await uploadToTypebot(page, jdPath);
             await page.waitForTimeout(3000);
-            const next = page.locator('button.cs_button, button:has-text("Next")').first();
+            const next = page.locator(TYPEBOT.button('Next')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
@@ -28,7 +41,7 @@ test.describe('Match Bot Flow', () => {
         if (resPath) {
             await uploadToTypebot(page, resPath);
             await page.waitForTimeout(3000);
-            const next = page.locator('button.cs_button, button:has-text("Analyze"), button:has-text("Submit")').first();
+            const next = page.locator(TYPEBOT.button('Analyze|Submit')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }
