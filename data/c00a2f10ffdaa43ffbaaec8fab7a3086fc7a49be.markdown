@@ -1,0 +1,132 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus Medical Imaging Assistant
+            - generic [ref=e33]: We will assist you with analyzing medical images so that you have access to an extra pair of eyes.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our AI teammates will be involved in the analysis
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your image or taking a picture
+            - generic [ref=e75]: Can you provide the image?
+        - generic [ref=e77]:
+          - img "Attached image 1" [ref=e79] [cursor=pointer]
+          - generic [ref=e81]: File uploaded
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - figure [ref=e86]:
+            - img "Bot avatar" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e94]: Thank you! Lets take a look
+            - generic [ref=e99]:
+              - generic [ref=e100]: "Type of study: Obstetric ultrasound, first-trimester, midsagittal view of a single fetus with crown–rump length (CRL) measurement."
+              - generic [ref=e101]: Image quality assessment
+              - list [ref=e102]:
+                - listitem [ref=e103]:
+                  - generic [ref=e104]: "Overall quality: Good. The fetus is imaged in a true profile (midsagittal) view with appropriate magnification. The head, torso, and rump are clearly delineated, allowing a reliable CRL measurement."
+                - listitem [ref=e105]:
+                  - generic [ref=e106]: "Artifacts/issues: Minimal acoustic shadowing; no motion blur that would significantly affect measurements. As this is a single still image, assessment of dynamic structures (heartbeat, limb movement, Doppler flow) is not possible here."
+              - generic [ref=e107]: What is seen (technical and lay explanation)
+              - list [ref=e108]:
+                - listitem [ref=e109]:
+                  - generic [ref=e110]: The dotted line labeled “CRL” measures the distance from the top of the fetal head (crown) to the bottom of the torso (rump). This measurement is used to date the pregnancy between about 7 and 13+6 weeks.
+                - listitem [ref=e111]:
+                  - generic [ref=e112]: "The fetus appears appropriately formed for early second/late first trimester: normal-appearing head contour, spine, body, and limbs are suggested in this view."
+                - listitem [ref=e113]:
+                  - generic [ref=e114]: Nuchal translucency (the fluid space behind the neck) is not formally measured in this single image; therefore, first-trimester aneuploidy risk assessment cannot be derived from this picture alone.
+              - generic [ref=e115]: Diagnosis/impression from this image
+              - list [ref=e116]:
+                - listitem [ref=e117]:
+                  - generic [ref=e118]: Reassuring appearance of a singleton intrauterine pregnancy with a measurable CRL. No obvious structural abnormalities are identified in this still frame.
+                - listitem [ref=e119]:
+                  - generic [ref=e120]: The CRL shown appears to be within the typical range for the 11–13+6 week window (exact millimeters are not provided on the image, so precise gestational dating cannot be calculated here).
+                - listitem [ref=e121]:
+                  - generic [ref=e122]: "Important limitations: Many fetal anomalies cannot be excluded on a single image; full first-trimester scan includes multiple views, real‑time assessment of fetal heart activity, nuchal translucency measurement, and maternal pelvic evaluation."
+              - generic [ref=e123]: Plain‑language summary
+              - list [ref=e124]:
+                - listitem [ref=e125]:
+                  - generic [ref=e126]: This looks like a normal early pregnancy ultrasound picture. Your baby is lying on its back in profile, and the line measures from the head to the bottom to help date the pregnancy. Nothing worrisome is visible in this single image, but only a complete scan with measurements and the sonographer’s/doctor’s report can confirm that everything is progressing normally.
+              - generic [ref=e127]: Implications and likely next steps
+              - list [ref=e128]:
+                - listitem [ref=e129]:
+                  - generic [ref=e130]: "If this image is from the standard 11–14 week visit:"
+                  - list [ref=e131]:
+                    - listitem [ref=e132]:
+                      - generic [ref=e133]: Your provider will use the CRL to confirm gestational age and may adjust the estimated due date if needed.
+                    - listitem [ref=e134]:
+                      - generic [ref=e135]: "If desired/indicated, screening for chromosomal conditions (Down syndrome, trisomy 18/13) can be performed by:"
+                      - list [ref=e136]:
+                        - listitem [ref=e137]:
+                          - generic [ref=e138]: Nuchal translucency measurement plus maternal blood tests (first‑trimester combined screening), or
+                        - listitem [ref=e139]:
+                          - generic [ref=e140]: Cell‑free DNA screening (NIPT/cfDNA).
+                - listitem [ref=e141]:
+                  - generic [ref=e142]: Routine anatomy survey is recommended at 18–22 weeks regardless of screening choice.
+                - listitem [ref=e143]:
+                  - generic [ref=e144]: If any risk factors exist (e.g., prior anomalies, maternal conditions), targeted ultrasound or early fetal echocardiography may be advised.
+              - generic [ref=e145]: Common questions
+              - list [ref=e146]:
+                - listitem [ref=e147]:
+                  - generic [ref=e148]: What could be the cause of an abnormal finding at this stage?
+                  - list [ref=e149]:
+                    - listitem [ref=e150]:
+                      - generic [ref=e151]: Increased nuchal translucency, abnormal CRL for dates, or structural markers can be associated with chromosomal differences, cardiac defects, or other syndromes. None of these are identified from this single image.
+                - listitem [ref=e152]:
+                  - generic [ref=e153]: Do I need to change anything right now?
+                  - list [ref=e154]:
+                    - listitem [ref=e155]:
+                      - generic [ref=e156]: Continue prenatal vitamins (with folic acid), avoid smoking/alcohol/illicit drugs, and follow routine prenatal care. Manage chronic conditions per your provider’s guidance.
+                - listitem [ref=e157]:
+                  - generic [ref=e158]: Do I need more tests?
+                  - list [ref=e159]:
+                    - listitem [ref=e160]:
+                      - generic [ref=e161]: Yes, standard care includes either first‑trimester combined screening or cfDNA, and a detailed mid‑pregnancy anatomy ultrasound. Your clinician will tailor recommendations based on your history and preferences.
+                - listitem [ref=e162]:
+                  - generic [ref=e163]: How certain is the diagnosis from this image alone?
+                  - list [ref=e164]:
+                    - listitem [ref=e165]:
+                      - generic [ref=e166]: Low. This single still image is reassuring but cannot confirm normal development or rule out many conditions; interpretation should come from the complete ultrasound exam and clinical context.
+              - generic [ref=e167]: Recommendations
+              - list [ref=e168]:
+                - listitem [ref=e169]:
+                  - generic [ref=e170]: Discuss these images and the full report with your obstetric provider.
+                - listitem [ref=e171]:
+                  - generic [ref=e172]: If screening has not been done yet and you are within 11–13+6 weeks, consider NT measurement with bloodwork or cfDNA.
+                - listitem [ref=e173]:
+                  - generic [ref=e174]: Schedule the second‑trimester anatomy scan at 18–22 weeks.
+                - listitem [ref=e175]:
+                  - generic [ref=e176]: Seek urgent care if you experience heavy bleeding, severe pain, fever, or loss of pregnancy symptoms.
+              - generic [ref=e177]: Resources for further reading
+              - list [ref=e178]:
+                - listitem [ref=e179]:
+                  - generic [ref=e180]: "ACOG: Prenatal Genetic Screening Tests – https://www.acog.org/womens-health/faqs/prenatal-genetic-screening-tests"
+                - listitem [ref=e181]:
+                  - generic [ref=e182]: "ISUOG Patient Information: First‑trimester ultrasound – https://www.isuog.org/clinical-resources/patient-information-patient-leaflets.html"
+                - listitem [ref=e183]:
+                  - generic [ref=e184]: "NHS: Screening for Down’s, Edwards’ and Patau’s syndromes – https://www.nhs.uk/pregnancy/your-pregnancy-care/screening-for-downs-edwards-and-pataus-syndromes/"
+              - generic [ref=e185]: Note This interpretation is educational and not a substitute for the official radiology/obstetric report. Please rely on your healthcare professional’s findings for clinical decisions.
+            - generic [ref=e191]: Hope that was helpful!
+        - generic [ref=e195]:
+          - button "Analyse another" [ref=e197] [cursor=pointer]
+          - button "Exit" [ref=e199] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e201]
+```
