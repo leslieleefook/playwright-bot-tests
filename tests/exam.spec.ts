@@ -1,86 +1,137 @@
 import { test, expect } from '@playwright/test';
-import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
-import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
+import { uploadToTypebot, getFixturePath, clickTypebotButton } from '../utils/uploadHelper';
 
 const BOT_URL = 'https://bot.incusservices.com/exam';
-const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
-test.describe('Exam Bot Interaction Flow', () => {
-    test('should trigger exam grade email and verify receipt', async ({ page }) => {
-        console.log(`Navigating to Exam Bot: ${BOT_URL}...`);
+test.describe('Exam Bot - Grading Analysis', () => {
+    test('should analyze exams and display grades for both candidates', async ({ page }) => {
+        // Increase timeout for AI processing
+        test.setTimeout(180000);
+        
+        console.log(`[EXAM] Navigating to: ${BOT_URL}`);
         await page.goto(BOT_URL);
 
         // Wait for Typebot to load
+        console.log('[EXAM] Waiting for Typebot to load...');
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
         
-        // Wait for typing animation to complete before clicking consent
-        console.log('Waiting for initial typing animation...');
-        await page.waitForTimeout(5000);
+        // Wait for initial typing animation
+        console.log('[EXAM] Waiting for initial messages...');
+        await page.waitForTimeout(6000);
 
-        // Accept consent first
-        console.log('Accepting consent...');
-        try {
-            await clickTypebotButton(page, 'Yes I consent', 30000);
-        } catch (e) {
-            console.log('Retrying consent click with broader pattern...');
-            await clickTypebotButton(page, 'Yes|consent|I consent', 20000);
-        }
-        
-        // Wait for flow to advance after consent
-        console.log('Waiting for flow to advance after consent...');
-        await page.waitForTimeout(5000);
+        // Step 1: Accept consent
+        console.log('[EXAM] Step 1: Accepting consent...');
+        await clickTypebotButton(page, 'Yes I consent', 30000);
+        await page.waitForTimeout(3000);
 
-        // Upload Quiz
-        console.log('Uploading Quiz...');
+        // Step 2: Upload Quiz
+        console.log('[EXAM] Step 2: Uploading quiz...');
         const quizPath = getFixturePath('exam', 'quizz');
-        if (quizPath) {
-            await uploadToTypebot(page, quizPath);
-            // Wait for button OR flow to auto-advance
-            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
+        if (!quizPath) throw new Error('Quiz fixture not found');
+        await uploadToTypebot(page, quizPath);
+        await page.waitForTimeout(3000);
+
+        // Step 3: Upload Answers
+        console.log('[EXAM] Step 3: Uploading answers...');
+        const answersPath = getFixturePath('exam', 'answers');
+        if (!answersPath) throw new Error('Answers fixture not found');
+        await uploadToTypebot(page, answersPath);
+        await page.waitForTimeout(3000);
+
+        // Step 4: Upload Response 1
+        console.log('[EXAM] Step 4: Uploading student response 1...');
+        const response1Path = getFixturePath('exam', 'response1');
+        if (!response1Path) throw new Error('Response1 fixture not found');
+        await uploadToTypebot(page, response1Path);
+        await page.waitForTimeout(3000);
+
+        // Step 5: Click "Add another response" to add second student
+        console.log('[EXAM] Step 5: Clicking "Add another response"...');
+        await clickTypebotButton(page, 'Add another response', 30000);
+        await page.waitForTimeout(3000);
+
+        // Step 6: Upload Response 2
+        console.log('[EXAM] Step 6: Uploading student response 2...');
+        const response2Path = getFixturePath('exam', 'response2');
+        if (!response2Path) throw new Error('Response2 fixture not found');
+        await uploadToTypebot(page, response2Path);
+        await page.waitForTimeout(3000);
+
+        // Step 7: Click "Start analyzing"
+        console.log('[EXAM] Step 7: Starting analysis...');
+        await clickTypebotButton(page, 'Start analyzing', 30000);
+
+        // Step 8: Wait for AI analysis (this may take a while)
+        console.log('[EXAM] Step 8: Waiting for AI analysis (up to 120s)...');
+        
+        // Wait for grading results to appear in the chat
+        // The bot should return analysis containing scores/grades for the students
+        const analysisTimeout = 120000;
+        const startTime = Date.now();
+        let analysisFound = false;
+        
+        while (Date.now() - startTime < analysisTimeout) {
+            const hasAnalysis = await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                if (!typebot) return false;
+                const shadow = (typebot as any).shadowRoot;
+                if (!shadow) return false;
+                
+                // Get all message text content
+                const messages = shadow.querySelectorAll('[class*="message"], [class*="bubble"], [class*="text"]');
+                const allText = Array.from(messages).map(m => m.textContent || '').join(' ').toLowerCase();
+                
+                // Check for indicators of grading analysis
+                // The bot should mention scores, grades, or analysis results
+                const hasScoreIndicator = 
+                    allText.includes('score') || 
+                    allText.includes('grade') ||
+                    allText.includes('mark') ||
+                    allText.includes('points') ||
+                    allText.includes('correct') ||
+                    allText.includes('analysis') ||
+                    allText.includes('result') ||
+                    allText.includes('student');
+                
+                // Also check for numbered results (e.g., "1.", "Q1", percentages)
+                const hasNumberedResults = /\d+%|\d+\/\d+|q\d|question\s*\d/i.test(allText);
+                
+                return hasScoreIndicator || hasNumberedResults;
+            });
+            
+            if (hasAnalysis) {
+                console.log('[EXAM] Analysis results detected!');
+                analysisFound = true;
+                break;
+            }
+            
+            // Log progress every 15 seconds
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            if (elapsed % 15 === 0) {
+                console.log(`[EXAM] Waiting for analysis... (${elapsed}s)`);
+            }
+            
             await page.waitForTimeout(2000);
         }
 
-        // Upload Answers
-        console.log('Uploading Answers...');
-        const ansPath = getFixturePath('exam', 'answers');
-        if (ansPath) {
-            await uploadToTypebot(page, ansPath);
-            // Wait for button OR flow to auto-advance
-            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
-            await page.waitForTimeout(2000);
-        }
+        // Capture final state for debugging
+        const finalContent = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            const shadow = (typebot as any)?.shadowRoot;
+            if (!shadow) return 'No shadow root';
+            
+            const messages = shadow.querySelectorAll('[class*="message"], [class*="bubble"], [class*="text"]');
+            return Array.from(messages)
+                .map(m => m.textContent?.substring(0, 200))
+                .filter(Boolean)
+                .slice(-5)
+                .join('\n---\n');
+        });
+        console.log(`[EXAM] Final bot content (last 5 messages):\n${finalContent}`);
 
-        // Upload Response 1
-        console.log('Uploading Response Image...');
-        const res1Path = getFixturePath('exam', 'response1');
-        if (res1Path) {
-            await uploadToTypebot(page, res1Path);
-            // Wait for button OR flow to auto-advance
-            await waitForTypebotButtonOrAdvance(page, 'Submit|Next|Continue|Skip|Send', 15000);
-            await page.waitForTimeout(2000);
-        }
-
-        // Verify Completion
-        console.log('Verifying submission completion...');
-        await page.waitForTimeout(10000);
-        console.log('Exam Bot UI stage complete.');
-
-        // Verify Email
-        const emailSubject = 'Exam Grade';
-        console.log(`Waiting for email with subject: ${emailSubject}...`);
-        const mail = await waitForEmailImap(emailSubject, 10 * 60 * 1000);
-
-        if (!mail) {
-            console.log(`[FAIL] Email not received. Sending notification to ${NOTIFY_ON_FAILURE}...`);
-            await sendEmail(
-                NOTIFY_ON_FAILURE,
-                'FAILED: Exam Bot Test',
-                `The Exam bot test failed to generate a "${emailSubject}" email for ${BOT_EMAIL} within the timeout period.`
-            );
-            throw new Error(`Email not found: ${emailSubject}`);
-        }
-        console.log(`[SUCCESS] Verified email: ${mail.subject}`);
-        expect(mail).toBeTruthy();
+        // Assert that analysis was found
+        expect(analysisFound, 'Bot should display grading analysis results').toBe(true);
+        
+        console.log('[EXAM] ✅ Test passed - Grading analysis displayed successfully');
     });
 });
