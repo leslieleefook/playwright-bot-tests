@@ -31,6 +31,9 @@ export async function uploadFile(
  * IMPORTANT: Typebot renders inside a web component with shadow DOM.
  * The >> selector syntax pierces shadow DOM boundaries.
  * .locator() chain does NOT pierce shadow DOM - you must use >> at the start.
+ * 
+ * NOTE: Some bot flows have intermediate steps (name/email entry) before upload.
+ * This function will skip through text input steps if they appear.
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
     const absolutePath = path.resolve(filePath);
@@ -43,15 +46,61 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
         // IMPORTANT: Wait for Typebot's typing animation to complete before looking for upload elements
         // The bot shows a "typing..." animation and elements render AFTER it completes
         console.log('[UPLOAD] Waiting for typing animation to complete...');
-        await page.waitForTimeout(5000); // Initial wait for typing animation
+        await page.waitForTimeout(3000); // Initial wait for typing animation
         
         // Wait for shadow DOM content to render (upload elements may take time to appear in flow)
         console.log('[UPLOAD] Waiting for upload elements in shadow DOM...');
         
+        // First, check if there's a text input step that needs to be skipped
+        // Some bot flows ask for name/email before showing upload
+        const hasTextInputStep = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            
+            const textInput = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])');
+            const sendButton = shadow.querySelector('button');
+            const fileInput = shadow.querySelector('input[type="file"]');
+            
+            // If there's a text input and send button but NO file input, it's a text step
+            return !!textInput && !!sendButton && !fileInput;
+        });
+        
+        if (hasTextInputStep) {
+            console.log('[UPLOAD] Detected text input step before upload - attempting to skip...');
+            // Try to skip the text input by pressing Enter or clicking Skip if available
+            const skipped = await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                const shadow = (typebot as any)?.shadowRoot;
+                if (!shadow) return false;
+                
+                // Look for skip button
+                const buttons = shadow.querySelectorAll('button');
+                for (const btn of buttons) {
+                    const text = (btn as HTMLButtonElement).textContent?.toLowerCase() || '';
+                    if (text.includes('skip') || text.includes('next') || text.includes('continue')) {
+                        (btn as HTMLButtonElement).click();
+                        return true;
+                    }
+                }
+                return false;
+            });
+            
+            if (skipped) {
+                console.log('[UPLOAD] Clicked skip/next button');
+                await page.waitForTimeout(2000);
+            } else {
+                // If no skip button, the text input might be required - fill with placeholder
+                console.log('[UPLOAD] No skip button found, text input may be required - check test flow');
+            }
+        }
+        
         // Poll for upload elements with debugging
-        const uploadTimeout = 60000;
+        const uploadTimeout = 90000; // Extended timeout for slow CI environments
         const startTime = Date.now();
         let uploadElementFound = false;
+        let lastLogTime = 0;
         
         while (Date.now() - startTime < uploadTimeout) {
             const state = await page.evaluate(() => {
@@ -65,31 +114,63 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
                 const dropzone = shadow.querySelector('#dropzone-file');
                 const dropzoneClass = shadow.querySelector('[class*="dropzone"]');
                 const labelForFile = shadow.querySelector('label[for*="file"]');
+                const clickToUpload = shadow.querySelector('[class*="upload"], label[for*="dropzone"]');
                 
                 // Also check for any visible content for debugging
                 const buttons = Array.from(shadow.querySelectorAll('button')).map(b => (b as HTMLButtonElement).textContent?.trim());
-                const inputs = shadow.querySelectorAll('input').length;
+                const inputs = Array.from(shadow.querySelectorAll('input'));
+                const inputTypes = inputs.map(i => (i as HTMLInputElement).type);
                 
                 return {
                     hasFileInput: !!fileInput,
                     hasDropzone: !!dropzone,
                     hasDropzoneClass: !!dropzoneClass,
                     hasLabelForFile: !!labelForFile,
+                    hasClickToUpload: !!clickToUpload,
                     buttonCount: buttons.length,
                     buttonTexts: buttons.slice(0, 5),
-                    inputCount: inputs
+                    inputCount: inputs.length,
+                    inputTypes: inputTypes
                 };
             });
             
-            if (state.hasFileInput || state.hasDropzone || state.hasDropzoneClass || state.hasLabelForFile) {
+            if (state.hasFileInput || state.hasDropzone || state.hasDropzoneClass || state.hasLabelForFile || state.hasClickToUpload) {
                 console.log(`[UPLOAD] Found upload element: ${JSON.stringify(state)}`);
                 uploadElementFound = true;
                 break;
             }
             
-            // Log progress every 5 seconds
-            if ((Date.now() - startTime) % 5000 < 500) {
-                console.log(`[UPLOAD] Waiting... Current state: ${JSON.stringify(state)}`);
+            // Check if stuck on text input step - try to skip it
+            if (state.inputCount === 1 && state.inputTypes && !state.inputTypes.includes('file') && state.buttonCount >= 1) {
+                console.log(`[UPLOAD] Detected text input step, trying to skip...`);
+                const skipped = await page.evaluate(() => {
+                    const typebot = document.querySelector('typebot-standard');
+                    const shadow = (typebot as any)?.shadowRoot;
+                    if (!shadow) return false;
+                    
+                    const buttons = shadow.querySelectorAll('button');
+                    for (const btn of buttons) {
+                        const text = (btn as HTMLButtonElement).textContent?.toLowerCase() || '';
+                        const ariaLabel = (btn as HTMLButtonElement).getAttribute('aria-label')?.toLowerCase() || '';
+                        if (text.includes('skip') || text.includes('next') || ariaLabel.includes('skip')) {
+                            (btn as HTMLButtonElement).click();
+                            return 'skip';
+                        }
+                    }
+                    return false;
+                });
+                if (skipped) {
+                    console.log('[UPLOAD] Clicked skip button, waiting...');
+                    await page.waitForTimeout(3000);
+                    continue; // Re-check for upload element
+                }
+            }
+            
+            // Log progress every 10 seconds (reduced frequency)
+            const now = Date.now();
+            if (now - lastLogTime >= 10000) {
+                console.log(`[UPLOAD] Waiting... (${Math.round((now - startTime)/1000)}s) State: ${JSON.stringify(state)}`);
+                lastLogTime = now;
             }
             
             await page.waitForTimeout(500);

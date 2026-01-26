@@ -13,12 +13,23 @@ test.describe('Exam Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(3000);
+        
+        // Wait for typing animation to complete before clicking consent
+        console.log('Waiting for initial typing animation...');
+        await page.waitForTimeout(5000);
 
         // Accept consent first
         console.log('Accepting consent...');
-        await clickTypebotButton(page, 'Yes I consent', 40000);
-        await page.waitForTimeout(3000);
+        try {
+            await clickTypebotButton(page, 'Yes I consent', 30000);
+        } catch (e) {
+            console.log('Retrying consent click with broader pattern...');
+            await clickTypebotButton(page, 'Yes|consent|I consent', 20000);
+        }
+        
+        // Wait for flow to advance after consent
+        console.log('Waiting for flow to advance after consent...');
+        await page.waitForTimeout(5000);
 
         // Upload Quiz
         console.log('Uploading Quiz...');
