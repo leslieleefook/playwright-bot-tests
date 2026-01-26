@@ -10,36 +10,32 @@ test.describe('TDE Bot Interaction Flow', () => {
         console.log(`Navigating to TDE Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Initial prompt often asks if ready
-        console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await startBtn.click();
+        // Helper to wait for and fill textbox
+        const fillTextbox = async (value: string) => {
+            const textbox = page.getByRole('textbox').first();
+            await textbox.waitFor({ state: 'visible', timeout: 30000 });
+            await textbox.fill(value);
+            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
+            await sendBtn.click();
+            await page.waitForTimeout(2000);
+        };
 
+        // TDE bot starts directly with name input (no Yes button)
         // 1. Name
         console.log('Providing Name...');
-        const nameInput = page.locator('input.text-input, input[placeholder*="name"]').first();
-        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
-        await nameInput.fill('Leslie');
-        await page.keyboard.press('Enter');
+        await fillTextbox('Leslie');
 
-        // 2. Email
+        // 2. Email (if asked)
         console.log('Providing Email...');
-        const emailInput = page.locator('input[type="email"], input[placeholder*="email"]').first();
-        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
-        await emailInput.fill(BOT_EMAIL);
-        await page.keyboard.press('Enter');
+        await fillTextbox(BOT_EMAIL);
 
         // 3. Service Interest/Details
         console.log('Providing Service Inquiry...');
-        const inquiryInput = page.locator('input.text-input, textarea, input[placeholder*="Type"]').first();
-        await inquiryInput.waitFor({ state: 'visible', timeout: 30000 });
-        await inquiryInput.fill('Inquiring about technical delivery excellence frameworks for cloud platforms.');
-        await page.keyboard.press('Enter');
+        await fillTextbox('Inquiring about technical delivery excellence frameworks for cloud platforms.');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');
-        await page.waitForTimeout(5000); // Wait for submission
+        await page.waitForTimeout(5000);
         console.log('TDE Bot UI stage complete.');
 
         // 4. Verify Email Receipt via IMAP
