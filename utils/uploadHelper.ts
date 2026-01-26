@@ -42,21 +42,25 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
         // Wait for Typebot web component to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
         
-        // CRITICAL: Wait for shadow DOM content to actually render
-        // The shadow DOM exists immediately but content loads asynchronously
-        console.log('[UPLOAD] Waiting for shadow DOM content to render...');
+        // CRITICAL: Wait for ACTUAL upload elements to render (not just CSS)
+        // The shadow DOM loads styles first, then chat structure, then upload input
+        // We must wait specifically for file-related elements, not just any content
+        console.log('[UPLOAD] Waiting for upload elements to render in shadow DOM...');
         await page.waitForFunction(() => {
             const typebot = document.querySelector('typebot-standard');
             if (!typebot) return false;
             const shadow = (typebot as any).shadowRoot;
             if (!shadow) return false;
-            // Wait until shadow DOM has actual content (not empty)
-            // Look for either file input or any chat container structure
+            
+            // ONLY pass when actual upload-related elements are present
+            // Don't accept just styles or chat structure - need the file input
             const hasFileInput = shadow.querySelector('input[type="file"]');
-            const hasContent = shadow.children && shadow.children.length > 0;
             const hasUploadArea = shadow.querySelector('[class*="upload"], [class*="dropzone"], label[for*="file"]');
-            return hasFileInput || hasUploadArea || hasContent;
-        }, { timeout: 30000 });
+            const hasDropzoneFile = shadow.querySelector('#dropzone-file');
+            const hasUploadLabel = shadow.querySelector('label.typebot-upload-input');
+            
+            return !!(hasFileInput || hasUploadArea || hasDropzoneFile || hasUploadLabel);
+        }, { timeout: 60000 }); // Increased timeout - bot flow needs time to reach upload step
         
         // Additional small wait for any animations/transitions
         await page.waitForTimeout(1000);
