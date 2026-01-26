@@ -42,16 +42,65 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
         
         // Wait for shadow DOM content to render (upload elements may take time to appear in flow)
         console.log('[UPLOAD] Waiting for upload elements in shadow DOM...');
-        await page.waitForFunction(() => {
-            const typebot = document.querySelector('typebot-standard');
-            if (!typebot) return false;
-            const shadow = (typebot as any).shadowRoot;
-            if (!shadow) return false;
-            // Look for file input or upload-related elements
-            return !!(shadow.querySelector('input[type="file"]') || 
-                     shadow.querySelector('#dropzone-file') ||
-                     shadow.querySelector('[class*="dropzone"]'));
-        }, { timeout: 60000 });
+        
+        // Poll for upload elements with debugging
+        const uploadTimeout = 60000;
+        const startTime = Date.now();
+        let uploadElementFound = false;
+        
+        while (Date.now() - startTime < uploadTimeout) {
+            const state = await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                if (!typebot) return { error: 'no-typebot' };
+                const shadow = (typebot as any).shadowRoot;
+                if (!shadow) return { error: 'no-shadow' };
+                
+                // Check for upload elements
+                const fileInput = shadow.querySelector('input[type="file"]');
+                const dropzone = shadow.querySelector('#dropzone-file');
+                const dropzoneClass = shadow.querySelector('[class*="dropzone"]');
+                
+                // Also check for any visible content for debugging
+                const buttons = Array.from(shadow.querySelectorAll('button')).map(b => (b as HTMLButtonElement).textContent?.trim());
+                const inputs = shadow.querySelectorAll('input').length;
+                
+                return {
+                    hasFileInput: !!fileInput,
+                    hasDropzone: !!dropzone,
+                    hasDropzoneClass: !!dropzoneClass,
+                    buttonCount: buttons.length,
+                    buttonTexts: buttons.slice(0, 5),
+                    inputCount: inputs
+                };
+            });
+            
+            if (state.hasFileInput || state.hasDropzone || state.hasDropzoneClass) {
+                console.log(`[UPLOAD] Found upload element: ${JSON.stringify(state)}`);
+                uploadElementFound = true;
+                break;
+            }
+            
+            // Log progress every 5 seconds
+            if ((Date.now() - startTime) % 5000 < 500) {
+                console.log(`[UPLOAD] Waiting... Current state: ${JSON.stringify(state)}`);
+            }
+            
+            await page.waitForTimeout(500);
+        }
+        
+        if (!uploadElementFound) {
+            const finalState = await page.evaluate(() => {
+                const typebot = document.querySelector('typebot-standard');
+                const shadow = (typebot as any)?.shadowRoot;
+                if (!shadow) return { error: 'no-shadow' };
+                return {
+                    html: shadow.innerHTML?.substring(0, 500),
+                    buttons: Array.from(shadow.querySelectorAll('button')).map(b => (b as HTMLButtonElement).textContent?.trim())
+                };
+            });
+            console.log(`[UPLOAD] Upload element not found. Final state: ${JSON.stringify(finalState)}`);
+            throw new Error(`Upload element not found after ${uploadTimeout}ms`);
+        }
 
         // Method 1: Direct shadow DOM access via JavaScript (most reliable)
         console.log('[UPLOAD] Using direct shadow DOM access...');
@@ -149,19 +198,50 @@ export async function clickTypebotButton(page: Page, pattern: RegExp | string, t
     const patternStr = pattern instanceof RegExp ? pattern.source : pattern;
     console.log(`[TYPEBOT] Clicking button matching: ${patternStr}`);
     
-    // Wait for button to appear
-    await page.waitForFunction((pat) => {
+    // First, log available buttons for debugging
+    const availableButtons = await page.evaluate(() => {
         const typebot = document.querySelector('typebot-standard');
-        if (!typebot) return false;
+        if (!typebot) return { error: 'no-typebot' };
         const shadow = (typebot as any).shadowRoot;
-        if (!shadow) return false;
+        if (!shadow) return { error: 'no-shadow' };
         const buttons = shadow.querySelectorAll('button');
-        const regex = new RegExp(pat, 'i');
-        for (const btn of buttons) {
-            if (regex.test(btn.textContent || '')) return true;
-        }
-        return false;
-    }, patternStr, { timeout });
+        return { buttons: Array.from(buttons).map(b => (b as HTMLButtonElement).textContent?.trim() || '[empty]') };
+    });
+    console.log(`[TYPEBOT] Available buttons: ${JSON.stringify(availableButtons)}`);
+    
+    // Wait for button to appear with polling
+    const startTime = Date.now();
+    let found = false;
+    
+    while (Date.now() - startTime < timeout) {
+        found = await page.evaluate((pat) => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            const buttons = shadow.querySelectorAll('button');
+            const regex = new RegExp(pat, 'i');
+            for (const btn of buttons) {
+                if (regex.test(btn.textContent || '')) return true;
+            }
+            return false;
+        }, patternStr);
+        
+        if (found) break;
+        await page.waitForTimeout(500);
+    }
+    
+    if (!found) {
+        // Log final state for debugging
+        const finalButtons = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            const shadow = (typebot as any)?.shadowRoot;
+            if (!shadow) return [];
+            return Array.from(shadow.querySelectorAll('button')).map(b => (b as HTMLButtonElement).textContent?.trim() || '[empty]');
+        });
+        console.log(`[TYPEBOT] Final buttons available: ${JSON.stringify(finalButtons)}`);
+        throw new Error(`Button matching "${patternStr}" not found after ${timeout}ms. Available: ${JSON.stringify(finalButtons)}`);
+    }
 
     // Click the button
     await page.evaluate((pat) => {
