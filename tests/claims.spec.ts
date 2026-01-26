@@ -17,26 +17,27 @@ test.describe('Claims Bot Interaction Flow', () => {
         await startBtn.waitFor({ state: 'visible', timeout: 40000 });
         await startBtn.click();
 
+        // Helper to wait for and fill textbox
+        const fillTextbox = async (value: string) => {
+            const textbox = page.getByRole('textbox').first();
+            await textbox.waitFor({ state: 'visible', timeout: 30000 });
+            await textbox.fill(value);
+            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
+            await sendBtn.click();
+            await page.waitForTimeout(2000); // Wait for bot response
+        };
+
         // 1. Name
         console.log('Providing Name...');
-        const nameInput = page.locator('input.text-input, input[placeholder*="name"]').first();
-        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
-        await nameInput.fill('Leslie');
-        await page.keyboard.press('Enter');
+        await fillTextbox('Leslie');
 
         // 2. Email
         console.log('Providing Email...');
-        const emailInput = page.locator('input[type="email"], input[placeholder*="email"]').first();
-        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
-        await emailInput.fill(BOT_EMAIL);
-        await page.keyboard.press('Enter');
+        await fillTextbox(BOT_EMAIL);
 
         // 3. Claims Details
         console.log('Providing Claims Details...');
-        const detailsInput = page.locator('input.text-input, textarea, input[placeholder*="Type"]').first();
-        await detailsInput.waitFor({ state: 'visible', timeout: 30000 });
-        await detailsInput.fill('Reporting an issue with a recent service interaction for operational verification.');
-        await page.keyboard.press('Enter');
+        await fillTextbox('Reporting an issue with a recent service interaction for operational verification.');
 
         // 4. File Upload (optional if exist in fixtures)
         console.log('Checking for claim image upload...');
@@ -44,8 +45,8 @@ test.describe('Claims Bot Interaction Flow', () => {
         if (imgPath) {
             await uploadToTypebot(page, imgPath);
             await page.waitForTimeout(5000);
-            const nextBtn = page.locator('button:has-text("Continue"), button:has-text("Next"), button.cs_button').first();
-            if (await nextBtn.isVisible()) {
+            const nextBtn = page.getByRole('button', { name: /Continue|Next|Submit/i }).first();
+            if (await nextBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
                 await nextBtn.click();
             }
         }
