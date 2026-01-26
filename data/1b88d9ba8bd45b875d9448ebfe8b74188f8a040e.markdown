@@ -1,0 +1,123 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus Medical Imaging Assistant
+            - generic [ref=e33]: We will assist you with analyzing medical images so that you have access to an extra pair of eyes.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our AI teammates will be involved in the analysis
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your image or taking a picture
+            - generic [ref=e75]: Can you provide the image?
+        - generic [ref=e77]:
+          - img "Attached image 1" [ref=e79] [cursor=pointer]
+          - generic [ref=e81]: File uploaded
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - figure [ref=e86]:
+            - img "Bot avatar" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e94]: Thank you! Lets take a look
+            - generic [ref=e99]:
+              - generic [ref=e100]: "Medical image type: Obstetric ultrasound, mid‑sagittal (side) view of a first‑trimester fetus with a crown‑rump length (CRL) measurement line placed."
+              - generic [ref=e101]: Image quality assessment
+              - list [ref=e102]:
+                - listitem [ref=e103]:
+                  - generic [ref=e104]: "Overall quality: Good. The fetus is imaged in a true mid‑sagittal plane with adequate contrast and resolution. The head, spine, and rump are well delineated."
+                - listitem [ref=e105]:
+                  - generic [ref=e106]: "Artifacts/limitations: This is a single still image, so cardiac activity, movement, Doppler signals, and other planes cannot be assessed. The numeric CRL value is not visible on the frame, so exact gestational age can’t be derived here. Placenta location, uterus/cervix, adnexa, and nuchal translucency (NT) measurement are not evaluated on this one image."
+              - generic [ref=e107]: What is seen (technical)
+              - list [ref=e108]:
+                - listitem [ref=e109]:
+                  - generic [ref=e110]: Single intrauterine fetus in first trimester.
+                - listitem [ref=e111]:
+                  - generic [ref=e112]: CRL measurement markers are placed from the top of the fetal head (crown) to the bottom of the torso (rump). This is the standard dating measurement between about 6–13+6 weeks.
+                - listitem [ref=e113]:
+                  - generic [ref=e114]: Fetal profile, skull contour, spine, torso, and part of the limbs are seen with typical early‑gestation appearance.
+                - listitem [ref=e115]:
+                  - generic [ref=e116]: No obvious gross structural abnormality is apparent on this image alone. The small fluid space at the back of the neck (nuchal translucency) looks qualitatively within expected limits, but it is not measured here; a formal NT requires standardized technique and caliper placement.
+              - generic [ref=e117]: Lay summary
+              - list [ref=e118]:
+                - listitem [ref=e119]:
+                  - generic [ref=e120]: This is an early pregnancy ultrasound picture measuring your baby from head to bottom. Everything that can be seen on this single image looks typical for this stage. However, many important checks (heartbeat, exact size in millimeters, neck‑fluid measurement, placenta position) require a full exam and multiple images, so this picture alone cannot confirm or rule out problems.
+              - generic [ref=e121]: Potential implications and conditions considered
+              - list [ref=e122]:
+                - listitem [ref=e123]:
+                  - generic [ref=e124]: "Dating the pregnancy: The CRL is the most accurate way to estimate gestational age and due date in the first trimester. Because the actual measurement number is not shown, I can’t provide the gestational age from this frame."
+                - listitem [ref=e125]:
+                  - generic [ref=e126]: "Screening for chromosomal conditions: Around 11–13+6 weeks, a formal NT measurement combined with maternal blood tests (or non‑invasive prenatal testing, NIPT) can screen for conditions such as Down syndrome. This picture alone does not provide that screening result."
+                - listitem [ref=e127]:
+                  - generic [ref=e128]: "Structural anomalies: No obvious anomaly is visible here, but many conditions cannot be detected until later or require specific views."
+              - generic [ref=e129]: Common questions answered
+              - list [ref=e130]:
+                - listitem [ref=e131]:
+                  - generic [ref=e132]: What might cause abnormal findings if present? Increased NT or discordant CRL could relate to chromosomal differences, cardiac anomalies, dating differences (late/early ovulation), or, rarely, early growth issues. None of these are suggested by this single image, but they are examples of why full scans are performed.
+                - listitem [ref=e133]:
+                  - generic [ref=e134]: Do I need to change anything now? Continue prenatal vitamins with folic acid, avoid alcohol and tobacco, follow your clinician’s advice on medications, nutrition, and activity.
+                - listitem [ref=e135]:
+                  - generic [ref=e136]: "Do I need more tests? Yes—routine care includes:"
+                  - list [ref=e137]:
+                    - listitem [ref=e138]:
+                      - generic [ref=e139]: Completion of a full first‑trimester ultrasound to document cardiac activity, exact CRL measurement, and maternal anatomy.
+                    - listitem [ref=e140]:
+                      - generic [ref=e141]: "Optional screening: NT with first‑trimester serum markers or NIPT (cell‑free DNA)."
+                    - listitem [ref=e142]:
+                      - generic [ref=e143]: A detailed anatomy scan at 18–22 weeks regardless of early findings.
+                - listitem [ref=e144]:
+                  - generic [ref=e145]: How certain is any diagnosis from this image alone? Low. A still image is not enough to make or exclude a diagnosis; interpretation must be based on the full scan and clinical context.
+              - generic [ref=e146]: Recommendations
+              - list [ref=e147]:
+                - listitem [ref=e148]:
+                  - generic [ref=e149]: "If not already done, schedule/complete a first‑trimester ultrasound with documented:"
+                  - list [ref=e150]:
+                    - listitem [ref=e151]:
+                      - generic [ref=e152]: Fetal cardiac activity (heart rate)
+                    - listitem [ref=e153]:
+                      - generic [ref=e154]: Exact CRL in millimeters to date the pregnancy
+                    - listitem [ref=e155]:
+                      - generic [ref=e156]: NT measurement if gestational age is 11–13+6 weeks
+                    - listitem [ref=e157]:
+                      - generic [ref=e158]: Survey of uterus, placenta, cervix, and adnexa
+                - listitem [ref=e159]:
+                  - generic [ref=e160]: "Discuss prenatal screening options with your obstetric provider (combined first‑trimester screen versus NIPT). If screening is positive or NT is increased, consider referral to:"
+                  - list [ref=e161]:
+                    - listitem [ref=e162]:
+                      - generic [ref=e163]: Maternal‑Fetal Medicine (high‑risk obstetrics) and a genetic counselor
+                    - listitem [ref=e164]:
+                      - generic [ref=e165]: Diagnostic testing options (chorionic villus sampling or amniocentesis) if indicated
+                - listitem [ref=e166]:
+                  - generic [ref=e167]: Continue standard prenatal care and plan for the 18–22 week anatomy ultrasound.
+              - generic [ref=e168]: Reliable resources
+              - list [ref=e169]:
+                - listitem [ref=e170]:
+                  - generic [ref=e171]: "ACOG: Prenatal Genetic Screening Tests — https://www.acog.org/womens-health/faqs/prenatal-genetic-diagnostic-tests"
+                - listitem [ref=e172]:
+                  - generic [ref=e173]: "ISUOG Patient Information: First‑trimester ultrasound — https://www.isuog.org/clinical-resources/patient-information.html"
+                - listitem [ref=e174]:
+                  - generic [ref=e175]: "NHS: Screening for Down’s, Edwards’ and Patau’s syndromes — https://www.nhs.uk/pregnancy/your-pregnancy-care/screening-tests/"
+              - generic [ref=e176]: If you have the full ultrasound report (CRL value, gestational age, heart rate, NT measurement), I can help interpret those numbers and explain what they mean for your pregnancy.
+            - generic [ref=e182]: Hope that was helpful!
+        - generic [ref=e186]:
+          - button "Analyse another" [ref=e188] [cursor=pointer]
+          - button "Exit" [ref=e190] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e192]
+```
