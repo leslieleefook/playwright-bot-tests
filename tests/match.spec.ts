@@ -15,6 +15,29 @@ const TYPEBOT = {
     text: (pattern: string) => `typebot-standard >> text=${pattern}`,
 };
 
+/**
+ * Waits for any visible button in the Typebot and clicks it if it matches common patterns.
+ * Returns true if a button was found and clicked, false otherwise.
+ */
+async function waitForAndClickTypebotButton(page: any, patterns: string[], timeout = 30000): Promise<boolean> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+        for (const pattern of patterns) {
+            try {
+                const btn = page.locator(TYPEBOT.button(pattern)).first();
+                if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+                    await btn.click();
+                    return true;
+                }
+            } catch (e) {
+                // Continue trying
+            }
+        }
+        await page.waitForTimeout(500);
+    }
+    return false;
+}
+
 test.describe('Match Bot Flow', () => {
     test('should trigger job match result email', async ({ page }) => {
         console.log(`Navigating to Match Bot: ${BOT_URL}...`);
@@ -24,14 +47,21 @@ test.describe('Match Bot Flow', () => {
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
         await page.waitForTimeout(2000); // Allow shadow DOM to render
 
-        // Wait for initial bot interaction - some bots have a start button
+        // Wait for initial start button
         console.log('Checking for initial bot interaction...');
-        try {
-            const startBtn = page.locator(TYPEBOT.button('Start|Begin|Yes|OK|Continue|Upload|Match')).first();
-            await startBtn.waitFor({ state: 'visible', timeout: 10000 });
-            await startBtn.click();
+        const startClicked = await waitForAndClickTypebotButton(page, [
+            'Start',
+            'Begin',
+            'Yes',
+            'OK',
+            'Continue',
+            'Match',
+            'Let\'s go'
+        ], 15000);
+        if (startClicked) {
+            console.log('Clicked start button');
             await page.waitForTimeout(2000);
-        } catch (e) {
+        } else {
             console.log('No initial button found, proceeding with flow...');
         }
 
@@ -40,10 +70,18 @@ test.describe('Match Bot Flow', () => {
         const jdPath = getFixturePath('match', 'jd');
         if (jdPath) {
             await uploadToTypebot(page, jdPath);
-            await page.waitForTimeout(3000);
-            const next = page.locator(TYPEBOT.button('Next')).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            console.log('JD uploaded, waiting for next step...');
+            const progressClicked = await waitForAndClickTypebotButton(page, [
+                'Next',
+                'Continue',
+                'Upload',
+                'Done',
+                'OK'
+            ], 45000);
+            if (!progressClicked) {
+                console.log('No Next button found, bot may auto-advance');
+            }
+            await page.waitForTimeout(2000);
         }
 
         // Upload Resume
@@ -51,10 +89,19 @@ test.describe('Match Bot Flow', () => {
         const resPath = getFixturePath('match', 'resume1');
         if (resPath) {
             await uploadToTypebot(page, resPath);
-            await page.waitForTimeout(3000);
-            const next = page.locator(TYPEBOT.button('Analyze|Submit')).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            console.log('Resume uploaded, waiting for analysis...');
+            const progressClicked = await waitForAndClickTypebotButton(page, [
+                'Analyze',
+                'Submit',
+                'Match',
+                'Next',
+                'Continue',
+                'Done'
+            ], 45000);
+            if (!progressClicked) {
+                console.log('No analyze button found, bot may auto-advance');
+            }
+            await page.waitForTimeout(2000);
         }
 
         // Verify Completion

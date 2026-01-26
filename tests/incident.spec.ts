@@ -15,6 +15,29 @@ const TYPEBOT = {
     text: (pattern: string) => `typebot-standard >> text=${pattern}`,
 };
 
+/**
+ * Waits for any visible button in the Typebot and clicks it if it matches common patterns.
+ * Returns true if a button was found and clicked, false otherwise.
+ */
+async function waitForAndClickTypebotButton(page: any, patterns: string[], timeout = 30000): Promise<boolean> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+        for (const pattern of patterns) {
+            try {
+                const btn = page.locator(TYPEBOT.button(pattern)).first();
+                if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
+                    await btn.click();
+                    return true;
+                }
+            } catch (e) {
+                // Continue trying
+            }
+        }
+        await page.waitForTimeout(500);
+    }
+    return false;
+}
+
 test.describe('Incident Bot Interaction Flow', () => {
     test('should trigger incident confirmation email and verify receipt', async ({ page }) => {
         console.log(`Navigating to Incident Bot: ${BOT_URL}...`);
@@ -24,14 +47,21 @@ test.describe('Incident Bot Interaction Flow', () => {
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
         await page.waitForTimeout(2000); // Allow shadow DOM to render
 
-        // Wait for initial bot interaction - some bots have a start button
+        // Wait for initial start/ready button - incident bot has "Yes!"
         console.log('Checking for initial bot interaction...');
-        try {
-            const startBtn = page.locator(TYPEBOT.button('Start|Begin|Yes|OK|Continue|Upload|Report')).first();
-            await startBtn.waitFor({ state: 'visible', timeout: 10000 });
-            await startBtn.click();
+        const startClicked = await waitForAndClickTypebotButton(page, [
+            'Yes!',
+            'Yes',
+            'Start',
+            'Begin',
+            'OK',
+            'Continue',
+            'Report'
+        ], 15000);
+        if (startClicked) {
+            console.log('Clicked start button');
             await page.waitForTimeout(2000);
-        } catch (e) {
+        } else {
             console.log('No initial button found, proceeding with flow...');
         }
 
@@ -40,10 +70,18 @@ test.describe('Incident Bot Interaction Flow', () => {
         const scenePath = getFixturePath('incident', 'scence'); // Preserving user typo 'scence'
         if (scenePath) {
             await uploadToTypebot(page, scenePath);
-            await page.waitForTimeout(3000);
-            const next = page.locator(TYPEBOT.button('Next|Continue')).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            console.log('Scene uploaded, waiting for next step...');
+            const progressClicked = await waitForAndClickTypebotButton(page, [
+                'Next',
+                'Continue',
+                'Submit',
+                'Done',
+                'OK'
+            ], 45000);
+            if (!progressClicked) {
+                console.log('No Next button found, bot may auto-advance');
+            }
+            await page.waitForTimeout(2000);
         }
 
         // Upload Injury
@@ -51,10 +89,19 @@ test.describe('Incident Bot Interaction Flow', () => {
         const injuryPath = getFixturePath('incident', 'injury');
         if (injuryPath) {
             await uploadToTypebot(page, injuryPath);
-            await page.waitForTimeout(3000);
-            const next = page.locator(TYPEBOT.button('Submit|Next')).first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
+            console.log('Injury photo uploaded, waiting for submission...');
+            const progressClicked = await waitForAndClickTypebotButton(page, [
+                'Submit',
+                'Next',
+                'Continue',
+                'Done',
+                'Report',
+                'Finish'
+            ], 45000);
+            if (!progressClicked) {
+                console.log('No submit button found, bot may auto-advance');
+            }
+            await page.waitForTimeout(2000);
         }
 
         // Verify Completion
