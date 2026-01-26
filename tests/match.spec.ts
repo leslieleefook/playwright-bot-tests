@@ -22,7 +22,18 @@ test.describe('Match Bot Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(1000); // Allow shadow DOM to render
+        await page.waitForTimeout(2000); // Allow shadow DOM to render
+
+        // Wait for initial bot interaction - some bots have a start button
+        console.log('Checking for initial bot interaction...');
+        try {
+            const startBtn = page.locator(TYPEBOT.button('Start|Begin|Yes|OK|Continue|Upload|Match')).first();
+            await startBtn.waitFor({ state: 'visible', timeout: 10000 });
+            await startBtn.click();
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No initial button found, proceeding with flow...');
+        }
 
         // Upload JD
         console.log('Uploading Job Description...');

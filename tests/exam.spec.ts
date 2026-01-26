@@ -12,6 +12,7 @@ const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
  */
 const TYPEBOT = {
     button: (pattern: string) => `typebot-standard >> button:text-matches("${pattern}", "i")`,
+    textInput: 'typebot-standard >> input[type="text"], typebot-standard >> textarea, typebot-standard >> input.typebot-input',
     text: (pattern: string) => `typebot-standard >> text=${pattern}`,
 };
 
@@ -22,7 +23,18 @@ test.describe('Exam Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(1000); // Allow shadow DOM to render
+        await page.waitForTimeout(2000); // Allow shadow DOM to render
+
+        // Wait for initial bot interaction - some bots have a start button
+        console.log('Checking for initial bot interaction...');
+        try {
+            const startBtn = page.locator(TYPEBOT.button('Start|Begin|Yes|OK|Continue|Upload')).first();
+            await startBtn.waitFor({ state: 'visible', timeout: 10000 });
+            await startBtn.click();
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No initial button found, proceeding with flow...');
+        }
 
         // Upload Quiz
         console.log('Uploading Quiz...');
