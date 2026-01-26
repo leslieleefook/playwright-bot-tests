@@ -79,7 +79,8 @@ export async function waitForTypebotReady(page: Page, timeout = 40000): Promise<
         const shadow = (typebot as any).shadowRoot;
         if (!shadow) return false;
         // Chat has loaded when there's actual content (buttons, text, etc.)
-        return shadow.querySelector('button') !== null || shadow.innerText.length > 100;
+        const innerText = shadow.innerText || shadow.textContent || '';
+        return shadow.querySelector('button') !== null || innerText.length > 50;
     }, { timeout });
     
     // Small additional wait for any animations

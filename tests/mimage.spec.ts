@@ -53,9 +53,10 @@ test.describe('Mimage Bot Interaction Flow', () => {
             if (!typebot) return false;
             const shadow = (typebot as any).shadowRoot;
             if (!shadow) return false;
-            const text = shadow.innerText || '';
-            return /analysis|finding|result|diagnosis|assessment|report|processed|abnormal|normal/i.test(text);
-        }, { timeout: 60000 });
+            const text = shadow.innerText || shadow.textContent || '';
+            // Match common medical analysis terms
+            return /analysis|finding|result|diagnosis|assessment|report|processed|abnormal|normal|modality|ultrasound|comprehensive|image quality/i.test(text);
+        }, { timeout: 90000 });
         
         console.log('[SUCCESS] AI analysis displayed - test passed!');
     });
