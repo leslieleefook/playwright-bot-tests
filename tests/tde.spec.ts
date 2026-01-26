@@ -48,6 +48,13 @@ test.describe('TDE Bot Interaction Flow', () => {
 
         const mail = await waitForEmailImap(emailSubject, 10 * 60 * 1000);
 
+        // Handle skipped email verification (missing credentials in CI)
+        if (mail?.skipped) {
+            console.log('[SKIP] Email verification skipped - credentials not configured');
+            test.skip(true, 'Email verification skipped: TEST_EMAIL/TEST_EMAIL_PASSWORD not set');
+            return;
+        }
+
         if (!mail) {
             console.log(`[FAIL] Email not received. Sending notification to ${NOTIFY_ON_FAILURE}...`);
             await sendEmail(

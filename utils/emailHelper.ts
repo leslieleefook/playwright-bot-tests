@@ -5,10 +5,25 @@ import { IMAP_USER, IMAP_PASSWORD, IMAP_HOST, IMAP_PORT, SMTP_HOST, SMTP_PORT, S
 import nodemailer from 'nodemailer';
 
 /**
+ * Checks if email credentials are configured.
+ * Returns true if IMAP_USER and IMAP_PASSWORD are set, false otherwise.
+ */
+export function hasEmailCredentials(): boolean {
+    return Boolean(IMAP_USER && IMAP_PASSWORD);
+}
+
+/**
  * Connects to IMAP and waits for an email with the given subject.
  * Returns the parsed email object if found, or null if timeout.
+ * Returns { skipped: true } if credentials are not configured (for CI environments).
  */
 export async function waitForEmailImap(subject: string, timeoutMs: number = 10 * 60 * 1000): Promise<any | null> {
+    // Gracefully skip email verification if credentials are not configured
+    if (!hasEmailCredentials()) {
+        console.warn('[IMAP] ⚠️  Email credentials not configured. Skipping email verification.');
+        console.warn('[IMAP] Set TEST_EMAIL and TEST_EMAIL_PASSWORD environment variables to enable email tests.');
+        return { skipped: true, reason: 'credentials_missing' };
+    }
     const config = {
         imap: {
             user: IMAP_USER,

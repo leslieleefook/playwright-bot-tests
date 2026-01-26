@@ -40,7 +40,19 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
             await uploadFile(page, inputSelector, filePath, true);
         } else {
             console.log('[UPLOAD] No standard file input found, searching for dropzones...');
-            const uploadZone = page.locator('div[aria-label*="upload"], button:has-text("Upload"), .typebot-upload-button').first();
+            // Updated selectors for current Typebot UI (2024+)
+            const uploadZone = page.locator([
+                '[data-testid="file-upload"]',
+                '[data-testid="dropzone"]',
+                'div[role="button"][aria-label*="upload" i]',
+                'div[role="button"][aria-label*="file" i]',
+                '.typebot-file-upload',
+                '.typebot-upload-zone',
+                'button:has-text("Upload")',
+                'button:has-text("Choose file")',
+                'div.dropzone',
+                '[class*="upload"]'
+            ].join(', ')).first();
             await uploadZone.waitFor({ state: 'visible', timeout: 30000 });
             await uploadFile(page, uploadZone, filePath, false);
         }
