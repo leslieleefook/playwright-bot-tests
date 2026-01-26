@@ -1,0 +1,21 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - figure [ref=e13]:
+          - img "Bot avatar" [ref=e14]
+        - generic [ref=e15]:
+          - generic [ref=e21]: Hi 👋
+          - figure [ref=e26] [cursor=pointer]:
+            - img "Bubble image" [ref=e27]
+          - generic [ref=e33]: Welcome to the HSSE Incident Reporting Assistant
+          - generic [ref=e39]: We Respect Your Privacy. Any and all information collected will be kept strictly confidential and will not be sold, rented, loaned, or otherwise disclosed.
+          - generic [ref=e45]: Let's have a quick chat about the situation
+          - generic [ref=e51]: Ready?
+      - button "Yes!" [ref=e57] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e62]
+```
