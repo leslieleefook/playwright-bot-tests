@@ -1,0 +1,130 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus Medical Imaging Assistant
+            - generic [ref=e33]: We will assist you with analyzing medical images so that you have access to an extra pair of eyes.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our AI teammates will be involved in the analysis
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your image or taking a picture
+            - generic [ref=e75]: Can you provide the image?
+        - generic [ref=e77]:
+          - img "Attached image 1" [ref=e79] [cursor=pointer]
+          - generic [ref=e81]: File uploaded
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - figure [ref=e86]:
+            - img "Bot avatar" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e94]: Thank you! Lets take a look
+            - generic [ref=e99]:
+              - generic [ref=e100]: Summary
+              - list [ref=e101]:
+                - listitem [ref=e102]:
+                  - generic [ref=e103]: "Modality: Obstetric ultrasound, mid‑sagittal “profile” view of a single fetus with a crown–rump length (CRL) measurement in place."
+                - listitem [ref=e104]:
+                  - generic [ref=e105]: "Impression: Normal-appearing first‑trimester fetus. The CRL visually appears within the expected range for approximately 11–14 weeks’ gestation (likely around 12–13 weeks). No obvious structural abnormality is visible on this single still image. A full first‑trimester scan requires multiple views and measurements (e.g., nuchal translucency, heartbeat, uterus/placenta, adnexa), which are not assessable here."
+              - generic [ref=e106]: Image quality assessment
+              - list [ref=e107]:
+                - listitem [ref=e108]:
+                  - generic [ref=e109]: "Overall quality: Good. The fetus is in an appropriate neutral position, the midline profile is well obtained, and the CRL callipers appear to be placed from the crown (top of the head) to the rump (end of the torso)."
+                - listitem [ref=e110]:
+                  - generic [ref=e111]: "Artifacts/limitations: As this is a single static image, we cannot evaluate fetal heart activity, nuchal translucency (NT) precisely, nasal bone, placenta, amniotic fluid, or maternal structures. Minor gray‑scale speckle is expected and does not limit interpretation."
+              - generic [ref=e112]: Findings (technical)
+              - list [ref=e113]:
+                - listitem [ref=e114]:
+                  - generic [ref=e115]: Single fetus, longitudinal mid‑sagittal plane.
+                - listitem [ref=e116]:
+                  - generic [ref=e117]: "CRL: Exact numeric value is not provided on the image, but by scale and appearance it is within the typical range for 11–14 weeks. CRL is the standard for dating early pregnancy to within ~3–5 days."
+                - listitem [ref=e118]:
+                  - generic [ref=e119]: Fetal profile, calvarial contour, spine, and trunk look appropriate for this stage. No increased NT is evident on this still frame, though a formal NT measurement requires precise technique and caliper placement, which cannot be confirmed here.
+                - listitem [ref=e120]:
+                  - generic [ref=e121]: No gross defects (e.g., severe cranial or abdominal wall abnormalities) are visible on this single view.
+              - generic [ref=e122]: What this means in plain language
+              - list [ref=e123]:
+                - listitem [ref=e124]:
+                  - generic [ref=e125]: This looks like a normal first‑trimester ultrasound picture measuring your baby from head to bottom. The size appears appropriate for around the end of the first trimester. From this one image there is nothing worrisome, but a complete exam needs several images and measurements.
+              - generic [ref=e126]: Potential implications and related conditions
+              - list [ref=e127]:
+                - listitem [ref=e128]:
+                  - generic [ref=e129]: CRL primarily helps confirm gestational age and due date.
+                - listitem [ref=e130]:
+                  - generic [ref=e131]: Around this time, providers often also measure the nuchal translucency (a small fluid space at the back of the baby’s neck). If enlarged, it can be associated with chromosomal conditions (like Down syndrome), certain heart defects, or other problems. That measurement is not documented here, so no conclusion can be drawn from this single image.
+              - generic [ref=e132]: Common questions you may have
+              - list [ref=e133]:
+                - listitem [ref=e134]:
+                  - generic [ref=e135]: What could cause an abnormal finding at this stage?
+                  - list [ref=e136]:
+                    - listitem [ref=e137]:
+                      - generic [ref=e138]: Chromosomal differences, structural anomalies, or issues with placental development can sometimes be suggested by first‑trimester markers (e.g., increased NT, absent nasal bone). None of these are seen or measured here.
+                - listitem [ref=e139]:
+                  - generic [ref=e140]: Do I need to change anything now?
+                  - list [ref=e141]:
+                    - listitem [ref=e142]:
+                      - generic [ref=e143]: Generally no specific lifestyle change is indicated based solely on this image. Continue prenatal vitamins, healthy diet, hydration, and avoidance of alcohol/tobacco. Follow your obstetric provider’s guidance.
+                - listitem [ref=e144]:
+                  - generic [ref=e145]: Do I need more tests?
+                  - list [ref=e146]:
+                    - listitem [ref=e147]:
+                      - generic [ref=e148]: "Yes—routine prenatal care includes:"
+                      - list [ref=e149]:
+                        - listitem [ref=e150]:
+                          - generic [ref=e151]: Completion of first‑trimester screening (NT measurement + blood tests) or noninvasive prenatal testing (NIPT/cell‑free DNA), depending on your preferences and provider guidance.
+                        - listitem [ref=e152]:
+                          - generic [ref=e153]: A detailed second‑trimester anatomy ultrasound at 18–22 weeks to evaluate all organs.
+                        - listitem [ref=e154]:
+                          - generic [ref=e155]: Additional tests only if screening suggests higher risk or if there are symptoms.
+                - listitem [ref=e156]:
+                  - generic [ref=e157]: How certain is the “normal” assessment?
+                  - list [ref=e158]:
+                    - listitem [ref=e159]:
+                      - generic [ref=e160]: "Moderate certainty for what is visible: the CRL view appears appropriate. Certainty about overall fetal health is limited because many structures and screening markers cannot be judged from a single still image."
+              - generic [ref=e161]: Recommendations
+              - list [ref=e162]:
+                - listitem [ref=e163]:
+                  - generic [ref=e164]: Confirm that your full first‑trimester ultrasound and/or NT measurement has been performed and documented.
+                - listitem [ref=e165]:
+                  - generic [ref=e166]: Discuss prenatal genetic screening options (combined first‑trimester screen or NIPT) with your obstetric provider.
+                - listitem [ref=e167]:
+                  - generic [ref=e168]: Schedule the standard 18–22 week detailed anatomy scan.
+                - listitem [ref=e169]:
+                  - generic [ref=e170]: Seek urgent care if you experience concerning symptoms (e.g., heavy bleeding, severe pain, fluid leakage).
+              - generic [ref=e171]: Who to consult
+              - list [ref=e172]:
+                - listitem [ref=e173]:
+                  - generic [ref=e174]: Continue routine follow‑up with your obstetrician/midwife. If any screening result is abnormal, referral to a maternal–fetal medicine (perinatology) specialist and/or a genetic counselor is appropriate.
+              - generic [ref=e175]: Reliable resources
+              - list [ref=e176]:
+                - listitem [ref=e177]:
+                  - generic [ref=e178]: "ACOG Patient Education: Prenatal Genetic Screening Tests – https://www.acog.org/womens-health/faqs/prenatal-genetic-screening-tests"
+                - listitem [ref=e179]:
+                  - generic [ref=e180]: "RCOG: Ultrasound scans in pregnancy – https://www.rcog.org.uk/for-the-public/browse-our-patient-information/ultrasound-scans-in-pregnancy/"
+                - listitem [ref=e181]:
+                  - generic [ref=e182]: "March of Dimes: Prenatal care and tests – https://www.marchofdimes.org/find-support/topics/pregnancy/prenatal-care-tests"
+              - generic [ref=e183]: Note This interpretation is based on a single shared image and does not replace a full ultrasound report or clinical evaluation. Please review these findings with your prenatal care provider, who has access to the complete scan, measurements, and your medical history.
+            - generic [ref=e189]: Hope that was helpful!
+        - generic [ref=e193]:
+          - button "Analyse another" [ref=e195] [cursor=pointer]
+          - button "Exit" [ref=e197] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e199]
+```
