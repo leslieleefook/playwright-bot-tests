@@ -22,15 +22,26 @@ test.describe('Mimage Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(1000); // Allow shadow DOM to render
+        await page.waitForTimeout(2000); // Allow shadow DOM to render
 
-        // Upload Image
+        // First, initiate the flow - the bot may need a start button click
+        console.log('Initiating flow...');
+        try {
+            const startBtn = page.locator(TYPEBOT.button('Start|Begin|Upload|Continue|Yes')).first();
+            await startBtn.waitFor({ state: 'visible', timeout: 15000 });
+            await startBtn.click();
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No start button found, bot may start directly with upload...');
+        }
+
+        // Upload Image - wait for upload step to appear
         console.log('Uploading image for processing...');
         const path = getFixturePath('mimage', 'image');
         if (path) {
             await uploadToTypebot(page, path);
             await page.waitForTimeout(3000);
-            const next = page.locator(TYPEBOT.button('Process|Submit')).first();
+            const next = page.locator(TYPEBOT.button('Process|Submit|Continue|Next')).first();
             await next.waitFor({ state: 'visible', timeout: 30000 });
             await next.click();
         }

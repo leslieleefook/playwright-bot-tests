@@ -60,7 +60,7 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
             const hasUploadLabel = shadow.querySelector('label.typebot-upload-input');
             
             return !!(hasFileInput || hasUploadArea || hasDropzoneFile || hasUploadLabel);
-        }, { timeout: 60000 }); // Increased timeout - bot flow needs time to reach upload step
+        }, { timeout: 120000 }); // 2 min timeout - bot flow needs time to reach upload step
         
         // Additional small wait for any animations/transitions
         await page.waitForTimeout(1000);
