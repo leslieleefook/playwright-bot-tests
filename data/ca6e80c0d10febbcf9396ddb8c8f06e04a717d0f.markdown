@@ -1,0 +1,93 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - generic [ref=e21]: Hi 👋
+            - figure [ref=e26] [cursor=pointer]:
+              - img "Bubble image" [ref=e27]
+            - generic [ref=e33]: Welcome to the HSSE Incident Reporting Assistant
+            - generic [ref=e39]: We Respect Your Privacy. Any and all information collected will be kept strictly confidential and will not be sold, rented, loaned, or otherwise disclosed.
+            - generic [ref=e45]: Let's have a quick chat about the situation
+            - generic [ref=e51]: Ready?
+        - generic [ref=e55]: Yes!
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - figure [ref=e60]:
+            - img "Bot avatar" [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e68]: First I'll ask you a couple questions to start the reporting process
+            - generic [ref=e74]: Can you provide your name?
+        - generic [ref=e78]: John Doe
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - figure [ref=e83]:
+            - img "Bot avatar" [ref=e84]
+          - generic [ref=e85]:
+            - figure [ref=e90] [cursor=pointer]:
+              - img "Bubble image" [ref=e91]
+            - generic [ref=e97]: What's the best email to contact you?
+        - generic [ref=e101]: 1677006355115_38182701@zohomail.com
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - figure [ref=e106]:
+            - img "Bot avatar" [ref=e107]
+          - generic [ref=e114]: Who are you reporting on behalf of?
+        - generic [ref=e118]: myself
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - figure [ref=e123]:
+            - img "Bot avatar" [ref=e124]
+          - generic [ref=e125]:
+            - figure [ref=e130] [cursor=pointer]:
+              - img "Bubble image" [ref=e131]
+            - generic [ref=e137]: Hope you and everyone else is ok
+            - generic [ref=e143]: Can you share a picture showing the scene of the incident?
+        - generic [ref=e145]:
+          - img "Attached image 1" [ref=e147] [cursor=pointer]
+          - generic [ref=e149]: File uploaded
+      - generic [ref=e150]:
+        - generic [ref=e151]:
+          - figure [ref=e154]:
+            - img "Bot avatar" [ref=e155]
+          - generic [ref=e156]:
+            - generic [ref=e162]: got it!
+            - generic [ref=e168]: Can you share a picture showing any injuries please
+        - generic [ref=e170]:
+          - img "Attached image 1" [ref=e172] [cursor=pointer]
+          - generic [ref=e174]: File uploaded
+      - generic [ref=e175]:
+        - generic [ref=e176]:
+          - figure [ref=e179]:
+            - img "Bot avatar" [ref=e180]
+          - generic [ref=e181]:
+            - generic [ref=e187]: Thanks for sharing John Doe
+            - generic [ref=e193]: What were the actions taken following the incident?
+        - generic [ref=e197]: 2026-01-27
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - figure [ref=e202]:
+            - img "Bot avatar" [ref=e203]
+          - generic [ref=e210]: Any additional comments that you think are important?
+        - generic [ref=e214]: 10:30 AM
+      - generic [ref=e215]:
+        - generic [ref=e216]:
+          - figure [ref=e219]:
+            - img "Bot avatar" [ref=e220]
+          - generic [ref=e221]:
+            - generic [ref=e226]:
+              - generic [ref=e227]: John Doe, thank you for sharing.
+              - generic [ref=e228]: The info you shared will help us reduce the chances of this occurring again in the future.
+            - generic [ref=e234]: Next steps the team a will share a report with you summarizing
+        - generic [ref=e238]:
+          - button "Exit" [ref=e240] [cursor=pointer]
+          - button "Report another" [ref=e242] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e244]
+```
