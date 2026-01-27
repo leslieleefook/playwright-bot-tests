@@ -70,10 +70,17 @@ test.describe('Airoi Bot Email Flow', () => {
             console.log('Could not click field container');
         }
         
-        // Now fill - use force:true if element is covered
-        await textarea.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(500);
-        await textarea.fill('Automating repeated daily operational data entry and reporting.', { force: true });
+        // Now fill - use force:true to bypass visibility checks
+        // Skip scrollIntoViewIfNeeded since it can timeout on hidden-then-revealed forms
+        try {
+            // First attempt: normal wait for visibility
+            await textarea.waitFor({ state: 'visible', timeout: 5000 });
+            await textarea.fill('Automating repeated daily operational data entry and reporting.');
+        } catch (e) {
+            console.log('Textarea not immediately visible, using force fill...');
+            // Fallback: force fill if element exists but isn't visible
+            await textarea.fill('Automating repeated daily operational data entry and reporting.', { force: true });
+        }
         
         // Click Continue button - try multiple selectors
         console.log('Clicking Continue...');
