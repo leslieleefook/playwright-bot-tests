@@ -13,32 +13,37 @@ test.describe('MKT Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(2000);
+        
+        // Wait for typing animation to complete
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
 
         // Helper to fill input and submit
-        const fillAndSubmit = async (value: string) => {
+        const fillAndSubmit = async (value: string, fieldName: string) => {
+            console.log(`Filling ${fieldName}...`);
+            await page.waitForTimeout(2000); // Wait for typing animation
             await fillTypebotInput(page, value);
             await page.waitForTimeout(500);
-            await clickTypebotButton(page, 'Send');
-            await page.waitForTimeout(2000);
+            await clickTypebotButton(page, 'Send', 10000);
+            await page.waitForTimeout(3000);
         };
 
         // Wait for bot to initialize and show the "Yes!" button
         console.log('Initiating flow...');
-        await clickTypebotButton(page, 'Yes', 40000);
-        await page.waitForTimeout(2000);
+        await clickTypebotButton(page, 'Yes!', 30000);
+        await page.waitForTimeout(3000);
 
         // 1. Name Input
         console.log('Providing Name...');
-        await fillAndSubmit('Leslie');
+        await fillAndSubmit('Leslie', 'Name');
 
         // 2. Email Input
         console.log('Providing Email...');
-        await fillAndSubmit(BOT_EMAIL);
+        await fillAndSubmit(BOT_EMAIL, 'Email');
 
         // 3. Product Idea
         console.log('Providing Product Idea...');
-        await fillAndSubmit('Automated AI testing framework for conversion bots');
+        await fillAndSubmit('Automated AI testing framework for conversion bots', 'Product Idea');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');

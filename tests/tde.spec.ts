@@ -16,7 +16,7 @@ test.describe('TDE Bot Interaction Flow', () => {
         
         // Wait for initial typing animation to complete
         console.log('[TDE] Waiting for initial typing animation...');
-        await page.waitForTimeout(4000);
+        await page.waitForTimeout(5000);
 
         // Helper to fill input and submit (with extended waits for typing animations)
         const fillAndSubmit = async (value: string, fieldName: string) => {

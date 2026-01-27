@@ -13,11 +13,14 @@ test.describe('Compliance Bot Interaction Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(2000);
+        
+        // Wait for typing animation to complete (bot shows welcome message first)
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
 
-        // Accept consent first
+        // Accept consent first - wait for button to appear after animation
         console.log('Accepting consent...');
-        await clickTypebotButton(page, 'Yes I consent', 40000);
+        await clickTypebotButton(page, 'Yes I consent', 30000);
         await page.waitForTimeout(3000);
 
         // 1. Upload ID

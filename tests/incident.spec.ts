@@ -1,56 +1,56 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
+import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/incident';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
 test.describe('Incident Bot Interaction Flow', () => {
-    test('should trigger incident confirmation email and verify receipt', async ({ page }) => {
+    test('should complete incident report flow and verify receipt', async ({ page }) => {
         console.log(`Navigating to Incident Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        
+        // Wait for typing animation to complete
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
+
+        // Click Yes! button to accept and start the flow
+        console.log('Clicking Yes! to start...');
+        await clickTypebotButton(page, 'Yes!', 30000);
         await page.waitForTimeout(3000);
 
-        // Accept consent first (if present)
-        console.log('Checking for consent button...');
-        try {
-            await clickTypebotButton(page, 'Yes I consent|Yes!', 15000);
+        // Helper to fill input and submit
+        const fillAndSubmit = async (value: string, fieldName: string) => {
+            console.log(`Filling ${fieldName}...`);
+            await page.waitForTimeout(2000); // Wait for typing animation
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send', 10000);
             await page.waitForTimeout(3000);
-        } catch (e) {
-            console.log('No consent button found, continuing...');
-        }
+        };
 
-        // Upload Scene
-        console.log('Uploading Incident Scene...');
-        const scenePath = getFixturePath('incident', 'scence');
-        if (scenePath) {
-            await uploadToTypebot(page, scenePath);
-            // Wait for button OR flow to auto-advance
-            await waitForTypebotButtonOrAdvance(page, 'Next|Continue|Skip|Send', 15000);
-            await page.waitForTimeout(2000);
-        }
-
-        // Upload Injury
-        console.log('Uploading Incident Injury...');
-        const injuryPath = getFixturePath('incident', 'injury');
-        if (injuryPath) {
-            await uploadToTypebot(page, injuryPath);
-            // Wait for button OR flow to auto-advance
-            await waitForTypebotButtonOrAdvance(page, 'Submit|Next|Continue|Skip|Send', 15000);
-            await page.waitForTimeout(2000);
-        }
+        // The bot now uses text inputs for incident details
+        // Fill in sample responses for the incident report
+        await fillAndSubmit('John Doe', 'Reporter Name');
+        await fillAndSubmit(BOT_EMAIL, 'Email');
+        await fillAndSubmit('Main Office Building', 'Location');
+        await fillAndSubmit('2026-01-27', 'Date of Incident');
+        await fillAndSubmit('10:30 AM', 'Time of Incident');
+        await fillAndSubmit('Slip and fall in hallway due to wet floor', 'Description');
+        await fillAndSubmit('Minor injury - first aid administered', 'Injuries/Damage');
+        await fillAndSubmit('Area was cordoned off and floor dried', 'Immediate Actions Taken');
 
         // Verify Completion
-        console.log('Verifying incident reporting completion...');
+        console.log('Verifying incident report completion...');
         await page.waitForTimeout(10000);
         console.log('Incident Bot UI stage complete.');
 
         // Verify Email
-        const emailSubject = 'Incident Report Confirmation';
+        const emailSubject = 'Incident Report';
         console.log(`Waiting for email with subject: ${emailSubject}...`);
         const mail = await waitForEmailImap(emailSubject, 10 * 60 * 1000);
 

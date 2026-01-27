@@ -1,57 +1,51 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/employeeexit';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
 test.describe('Employee Exit Bot Interaction Flow', () => {
-    test('should trigger exit feedback email and verify receipt', async ({ page }) => {
+    test('should complete exit interview flow and verify receipt', async ({ page }) => {
         console.log(`Navigating to Employee Exit Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Accept consent first (if present)
-        console.log('Checking for consent button...');
-        const consentBtn = page.getByRole('button', { name: /Yes I consent|Yes!/i }).first();
-        if (await consentBtn.isVisible({ timeout: 10000 }).catch(() => false)) {
-            await consentBtn.click();
-            await page.waitForTimeout(2000);
-        }
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        
+        // Wait for typing animation to complete
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
 
-        // Helper to wait for and fill textbox
-        const fillTextbox = async (value: string) => {
-            const textbox = page.getByRole('textbox').first();
-            await textbox.waitFor({ state: 'visible', timeout: 30000 });
-            await textbox.fill(value);
-            const sendBtn = page.getByRole('button', { name: /Send/i }).first();
-            await sendBtn.click();
-            await page.waitForTimeout(2000);
+        // Click Ready button to start the flow
+        console.log('Clicking Ready to start...');
+        await clickTypebotButton(page, 'Ready', 30000);
+        await page.waitForTimeout(3000);
+
+        // Helper to fill input and submit
+        const fillAndSubmit = async (value: string, fieldName: string) => {
+            console.log(`Filling ${fieldName}...`);
+            await page.waitForTimeout(2000); // Wait for typing animation
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send', 10000);
+            await page.waitForTimeout(3000);
         };
 
-        // Provide email if asked
-        const emailInput = page.locator('input[type="email"]').first();
-        if (await emailInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-            console.log('Providing Email...');
-            await emailInput.fill(BOT_EMAIL);
-            await page.keyboard.press('Enter');
-            await page.waitForTimeout(2000);
-        }
-
-        // Upload Transcription if needed
-        console.log('Checking for transcription upload...');
-        const transcriptionPath = getFixturePath('employeeexit', 'transcription');
-        if (transcriptionPath) {
-            await uploadToTypebot(page, transcriptionPath);
-            await page.waitForTimeout(3000);
-            const next = page.getByRole('button', { name: /Continue|Next|Submit|Skip|Send/i }).first();
-            if (await next.isVisible({ timeout: 5000 }).catch(() => false)) {
-                await next.click();
-            }
-        }
+        // The bot now uses text inputs for interview questions
+        // Fill in sample responses for the exit interview
+        await fillAndSubmit('John Doe', 'Name');
+        await fillAndSubmit(BOT_EMAIL, 'Email');
+        await fillAndSubmit('Software Developer', 'Position');
+        await fillAndSubmit('Engineering', 'Department');
+        await fillAndSubmit('Better career opportunity', 'Reason for leaving');
+        await fillAndSubmit('Great team and learning environment', 'What did you enjoy most');
+        await fillAndSubmit('Work-life balance could improve', 'Areas for improvement');
+        await fillAndSubmit('Yes, would recommend', 'Would you recommend company');
 
         // Verify Completion
-        console.log('Verifying recording completion...');
+        console.log('Verifying interview completion...');
         await page.waitForTimeout(10000);
         console.log('Employee Exit Bot UI stage complete.');
 

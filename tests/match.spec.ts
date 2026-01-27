@@ -13,16 +13,15 @@ test.describe('Match Bot Flow', () => {
 
         // Wait for Typebot to load
         await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
-        await page.waitForTimeout(3000);
+        
+        // Wait for typing animation to complete
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
 
-        // Accept consent first (if present)
-        console.log('Checking for consent button...');
-        try {
-            await clickTypebotButton(page, 'Yes I consent|Yes!', 15000);
-            await page.waitForTimeout(3000);
-        } catch (e) {
-            console.log('No consent button found, continuing...');
-        }
+        // Accept consent first
+        console.log('Accepting consent...');
+        await clickTypebotButton(page, 'Yes I consent', 30000);
+        await page.waitForTimeout(3000);
 
         // Upload JD
         console.log('Uploading Job Description...');
