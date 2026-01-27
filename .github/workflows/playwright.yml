@@ -49,6 +49,8 @@ jobs:
                   IMAP_PORT: ${{ secrets.IMAP_PORT }}
                   SMTP_HOST: ${{ secrets.SMTP_HOST }}
                   SMTP_PORT: ${{ secrets.SMTP_PORT }}
+                  # Skip email verification in CI - IMAP connections are unreliable in GitHub Actions
+                  SKIP_EMAIL_VERIFICATION: "true"
 
             - name: Upload Blob Report to GitHub Actions Artifacts
               if: always()
