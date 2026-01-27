@@ -1,0 +1,16 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e10]:
+      - figure [ref=e13]:
+        - img "Bot avatar" [ref=e14]
+      - generic [ref=e15]:
+        - figure [ref=e20] [cursor=pointer]:
+          - img "Bubble image" [ref=e21]
+        - generic [ref=e27]: The purpose of this is to capture a product idea and turn it into $$$
+        - generic [ref=e37]: Don't worry if this is you're first time, you can use any idea (the crazier the better) just to test it out
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e39]
+```
