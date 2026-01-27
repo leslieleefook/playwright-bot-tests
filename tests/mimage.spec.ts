@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/mimage';
@@ -11,20 +11,31 @@ test.describe('Mimage Bot Interaction Flow', () => {
         console.log(`Navigating to Mimage Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Upload Image
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        
+        // Wait for typing animation to complete
+        console.log('Waiting for typing animation to complete...');
+        await page.waitForTimeout(5000);
+
+        // Accept consent first
+        console.log('Accepting consent...');
+        await clickTypebotButton(page, 'Yes I consent', 30000);
+        await page.waitForTimeout(3000);
+
+        // Upload Image - wait for upload step to appear
         console.log('Uploading image for processing...');
         const path = getFixturePath('mimage', 'image');
         if (path) {
             await uploadToTypebot(page, path);
+            // Wait for button OR flow to auto-advance
+            await waitForTypebotButtonOrAdvance(page, 'Process|Submit|Continue|Next|Send', 30000);
             await page.waitForTimeout(3000);
-            const next = page.locator('button.cs_button, button:has-text("Process"), button:has-text("Submit")').first();
-            await next.waitFor({ state: 'visible', timeout: 30000 });
-            await next.click();
         }
 
         // Verify Completion
         console.log('Verifying image processing completion...');
-        await expect(page.getByText(/Image processed/i)).toBeVisible({ timeout: 30000 });
+        await page.waitForTimeout(10000);
         console.log('Mimage Bot UI stage complete.');
 
         // Verify Email

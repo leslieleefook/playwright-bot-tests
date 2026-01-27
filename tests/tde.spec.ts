@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
+import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/tde';
@@ -10,36 +11,55 @@ test.describe('TDE Bot Interaction Flow', () => {
         console.log(`Navigating to TDE Bot: ${BOT_URL}...`);
         await page.goto(BOT_URL);
 
-        // Initial prompt often asks if ready
-        console.log('Initiating flow...');
-        const startBtn = page.getByRole('button', { name: /Yes/i }).first();
-        await startBtn.waitFor({ state: 'visible', timeout: 40000 });
-        await startBtn.click();
+        // Wait for Typebot to load
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        
+        // Wait for initial typing animation to complete
+        console.log('[TDE] Waiting for initial typing animation...');
+        await page.waitForTimeout(5000);
 
+        // Helper to fill input and submit (with extended waits for typing animations)
+        const fillAndSubmit = async (value: string, fieldName: string) => {
+            console.log(`[TDE] Filling ${fieldName}: ${value.substring(0, 20)}...`);
+            
+            // Wait for any typing animation to complete before filling
+            await page.waitForTimeout(2000);
+            
+            await fillTypebotInput(page, value);
+            await page.waitForTimeout(1000);
+            
+            // Click Send button - may be text or icon
+            // The improved clickTypebotButton handles icon-only buttons
+            await clickTypebotButton(page, 'Send', 15000);
+            
+            // Wait for bot to process and show next question
+            await page.waitForTimeout(3000);
+        };
+
+        // TDE bot starts directly with name input (no Yes button)
         // 1. Name
         console.log('Providing Name...');
-        const nameInput = page.locator('input.text-input, input[placeholder*="name"]').first();
-        await nameInput.waitFor({ state: 'visible', timeout: 30000 });
-        await nameInput.fill('Leslie');
-        await page.keyboard.press('Enter');
+        await fillAndSubmit('Leslie', 'Name');
 
         // 2. Email
         console.log('Providing Email...');
-        const emailInput = page.locator('input[type="email"], input[placeholder*="email"]').first();
-        await emailInput.waitFor({ state: 'visible', timeout: 30000 });
-        await emailInput.fill(BOT_EMAIL);
-        await page.keyboard.press('Enter');
+        await fillAndSubmit(BOT_EMAIL, 'Email');
 
-        // 3. Service Interest/Details
-        console.log('Providing Service Inquiry...');
-        const inquiryInput = page.locator('input.text-input, textarea, input[placeholder*="Type"]').first();
-        await inquiryInput.waitFor({ state: 'visible', timeout: 30000 });
-        await inquiryInput.fill('Inquiring about technical delivery excellence frameworks for cloud platforms.');
-        await page.keyboard.press('Enter');
+        // 3. Company Name
+        console.log('Providing Company Name...');
+        await fillAndSubmit('Incus Services', 'Company');
+
+        // 4. Challenge/Problem
+        console.log('Providing Challenge...');
+        await fillAndSubmit('Low awareness of AI and how to leverage it for business operations', 'Challenge');
+
+        // 5. Industry
+        console.log('Providing Industry...');
+        await fillAndSubmit('Technology', 'Industry');
 
         // Verify Completion (on-page)
         console.log('Verifying completion message...');
-        await page.waitForTimeout(5000); // Wait for submission
+        await page.waitForTimeout(5000);
         console.log('TDE Bot UI stage complete.');
 
         // 4. Verify Email Receipt via IMAP
