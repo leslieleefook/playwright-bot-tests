@@ -1,0 +1,51 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - generic [ref=e21]: Hi 👋
+            - figure [ref=e26] [cursor=pointer]:
+              - img "Bubble image" [ref=e27]
+            - generic [ref=e33]: Welcome to the Insurance Claims Assistant
+            - generic [ref=e39]: We Respect Your Privacy. Any and all information collected will be kept strictly confidential and will not be sold, rented, loaned, or otherwise disclosed.
+            - generic [ref=e45]: Let's have a quick chat about your situation
+            - generic [ref=e51]: Ready?
+        - generic [ref=e55]: Yes!
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - figure [ref=e60]:
+            - img "Bot avatar" [ref=e61]
+          - generic [ref=e62]:
+            - generic [ref=e68]: First I'll ask you a couple questions to start the claims process
+            - generic [ref=e74]: Can you provide your name?
+        - generic [ref=e78]: Leslie
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - figure [ref=e83]:
+            - img "Bot avatar" [ref=e84]
+          - generic [ref=e85]:
+            - figure [ref=e90] [cursor=pointer]:
+              - img "Bubble image" [ref=e91]
+            - generic [ref=e97]: Nice to e meet you :)) 😃 Leslie !
+            - generic [ref=e103]: Just need your policy number for verification
+        - generic [ref=e107]: 1677006355115_38182701@zohomail.com
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - figure [ref=e112]:
+            - img "Bot avatar" [ref=e113]
+          - generic [ref=e114]:
+            - generic [ref=e120]: checking now....
+            - generic [ref=e126]: Super! we are all set Leslie
+            - generic [ref=e132]: What type of claim will you like to file?
+        - generic [ref=e136]:
+          - button "Auto" [ref=e138] [cursor=pointer]
+          - button "Home" [ref=e140] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e142]
+```
