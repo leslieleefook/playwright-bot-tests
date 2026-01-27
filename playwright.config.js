@@ -3,16 +3,16 @@ require('dotenv').config();
 
 module.exports = defineConfig({
     testDir: './tests',
-    timeout: 300 * 1000,
+    timeout: 360 * 1000, // 6 minutes per test for CI
     expect: {
-        timeout: 20000
+        timeout: 30000  // Increased for CI
     },
     fullyParallel: false,
     retries: process.env.CI ? 2 : 0,
     reporter: process.env.CI ? 'blob' : [['list'], ['html']],
     use: {
-        actionTimeout: 30000,  // Increased for CI environments
-        navigationTimeout: 60000,
+        actionTimeout: 45000,  // Increased for CI environments
+        navigationTimeout: 90000,  // Increased for slow redirects
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',

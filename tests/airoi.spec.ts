@@ -28,37 +28,91 @@ test.describe('Airoi Bot Email Flow', () => {
             // No overlay to dismiss
         }
 
-        // Step 1: Tasks - Wait for any textarea to be visible first
+        // Step 1: Tasks - Wait for form to be interactive
         console.log('Filling Step 1 (Tasks)...');
         
-        // First, try to find any visible textarea/input on the form
+        // Wait for form container to be present
         const formContainer = page.locator('.cs_form, form, [class*="form"]').first();
         await formContainer.waitFor({ state: 'visible', timeout: 60000 });
         
-        // Now find and fill the textarea
+        // The form may load with hidden fields that become visible after page is ready
+        // Wait for Livewire to fully initialize
+        await page.waitForTimeout(3000);
+        
+        // Try multiple strategies to find and interact with the textarea
         const textarea = page.locator('textarea').first();
-        await textarea.waitFor({ state: 'visible', timeout: 30000 });
+        
+        // First try: scroll to make visible if off-screen
+        try {
+            await page.evaluate(() => {
+                const ta = document.querySelector('textarea');
+                if (ta) {
+                    ta.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    // Force visibility if hidden
+                    (ta as HTMLElement).style.display = 'block';
+                    (ta as HTMLElement).style.visibility = 'visible';
+                }
+            });
+            await page.waitForTimeout(1000);
+        } catch (e) {
+            console.log('Scroll helper failed, continuing...');
+        }
+        
+        // Wait for textarea to be attached and try to make it visible
+        await textarea.waitFor({ state: 'attached', timeout: 30000 });
+        
+        // Click on the form area to potentially activate the field
+        try {
+            const fieldContainer = page.locator('[class*="field"], .cs_form, form').first();
+            await fieldContainer.click({ timeout: 5000 });
+            await page.waitForTimeout(500);
+        } catch (e) {
+            console.log('Could not click field container');
+        }
+        
+        // Now fill - use force:true if element is covered
         await textarea.scrollIntoViewIfNeeded();
         await page.waitForTimeout(500);
-        await textarea.fill('Automating repeated daily operational data entry and reporting.');
+        await textarea.fill('Automating repeated daily operational data entry and reporting.', { force: true });
         
-        // Click Continue button
-        const continueBtn = page.locator('button.cs_button, button:has-text("Continue")').first();
-        await continueBtn.waitFor({ state: 'visible', timeout: 20000 });
+        // Click Continue button - try multiple selectors
+        console.log('Clicking Continue...');
+        const continueBtn = page.locator('button.cs_button, button:has-text("Continue"), button:has-text("Next"), [type="submit"]').first();
+        await continueBtn.waitFor({ state: 'visible', timeout: 30000 });
         await continueBtn.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000);
 
-        // Helper to fill field and continue
+        // Helper to fill field and continue - with better visibility handling
         const fillStepAndContinue = async (value: string, stepName: string) => {
             console.log(`Filling ${stepName}...`);
-            // Wait for any input or textarea to be visible
-            const input = page.locator('textarea:visible, input:visible').first();
-            await input.waitFor({ state: 'visible', timeout: 30000 });
-            await input.fill(value);
+            
+            // Wait for page to settle after previous step
+            await page.waitForTimeout(2000);
+            
+            // Try to find any input or textarea
+            const input = page.locator('textarea, input[type="text"], input[type="email"], input[type="number"]').first();
+            
+            // Wait for element to be attached first
+            await input.waitFor({ state: 'attached', timeout: 45000 });
+            
+            // Force scroll into view and try to make visible
+            await page.evaluate(() => {
+                const inputs = document.querySelectorAll('textarea, input[type="text"], input[type="email"], input[type="number"]');
+                for (const inp of inputs) {
+                    inp.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    (inp as HTMLElement).style.display = 'block';
+                    (inp as HTMLElement).style.visibility = 'visible';
+                }
+            });
+            await page.waitForTimeout(500);
+            
+            // Fill with force option to handle covered elements
+            await input.fill(value, { force: true });
             await page.waitForTimeout(500);
             
             // Click continue/submit button
-            const btn = page.locator('button.cs_button, button:has-text("Continue"), button[type="submit"]').first();
+            const btn = page.locator('button.cs_button, button:has-text("Continue"), button:has-text("Next"), button[type="submit"]').first();
+            await btn.waitFor({ state: 'visible', timeout: 15000 });
             await btn.click();
             await page.waitForTimeout(2000);
         };

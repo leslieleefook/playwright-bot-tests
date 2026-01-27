@@ -262,16 +262,46 @@ export async function fillTypebotInput(page: Page, value: string, timeout: numbe
     
     // Wait for input to appear in shadow DOM (longer timeout for CI)
     const waitStart = Date.now();
-    try {
-        await page.waitForFunction(() => {
+    const pollInterval = 500;
+    let inputFound = false;
+    
+    while (Date.now() - waitStart < timeout) {
+        const state = await page.evaluate(() => {
             const typebot = document.querySelector('typebot-standard');
-            if (!typebot) return false;
+            if (!typebot) return { found: false, reason: 'no-typebot' };
             const shadow = (typebot as any).shadowRoot;
-            if (!shadow) return false;
+            if (!shadow) return { found: false, reason: 'no-shadow' };
+            
+            // Check for text inputs (not file inputs)
             const input = shadow.querySelector('input[type="text"], input[type="email"], textarea, input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"])');
-            return !!input;
-        }, { timeout });
-    } catch (err) {
+            
+            // Also check for flow-end indicators
+            const buttons = Array.from(shadow.querySelectorAll('button')).map((b: any) => b.textContent?.trim());
+            const isFlowEnd = buttons.includes('Repeat') || buttons.includes('Exit') || buttons.includes('Restart');
+            
+            return { 
+                found: !!input, 
+                isFlowEnd,
+                buttons: buttons.slice(0, 5)
+            };
+        });
+        
+        if (state.found) {
+            inputFound = true;
+            break;
+        }
+        
+        // If flow has ended (Repeat/Exit buttons), don't wait for input
+        if (state.isFlowEnd) {
+            const debugInfo = { inputs: [], buttons: state.buttons };
+            console.log(`[TYPEBOT] Input not found. Debug info: ${JSON.stringify(debugInfo)}`);
+            throw new Error(`Flow has ended - detected end buttons: ${state.buttons.join(', ')}`);
+        }
+        
+        await page.waitForTimeout(pollInterval);
+    }
+    
+    if (!inputFound) {
         // Debug: log what's in the shadow DOM
         const debugInfo = await page.evaluate(() => {
             const typebot = document.querySelector('typebot-standard');
@@ -283,10 +313,10 @@ export async function fillTypebotInput(page: Page, value: string, timeout: numbe
                 placeholder: i.placeholder
             }));
             const buttons = Array.from(shadow.querySelectorAll('button')).map((b: any) => b.textContent?.trim());
-            return { inputs, buttons, text: shadow.innerText?.substring(0, 200) };
+            return { inputs, buttons };
         });
         console.log(`[TYPEBOT] Input not found. Debug info: ${JSON.stringify(debugInfo)}`);
-        throw err;
+        throw new Error(`Input not found after ${timeout}ms`);
     }
     console.log(`[TYPEBOT] Input element found after ${Date.now() - waitStart}ms`);
 
