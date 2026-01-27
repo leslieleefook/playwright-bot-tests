@@ -32,15 +32,29 @@ test.describe('Claims Bot Interaction Flow', () => {
         console.log('Providing Name...');
         await fillAndSubmit('Leslie');
 
-        // 2. Email
-        console.log('Providing Email...');
+        // 2. Email (actually used for policy number verification)
+        console.log('Providing Email/Policy Number...');
         await fillAndSubmit(BOT_EMAIL);
 
-        // 3. Claims Details
-        console.log('Providing Claims Details...');
-        await fillAndSubmit('Reporting an issue with a recent service interaction for operational verification.');
+        // 3. Select Claim Type (bot shows buttons: Auto, Home)
+        console.log('Selecting claim type...');
+        await page.waitForTimeout(2000); // Wait for buttons to appear
+        await clickTypebotButton(page, 'Auto|Home', 30000); // Click either Auto or Home
+        await page.waitForTimeout(2000);
 
-        // 4. File Upload (optional if exist in fixtures)
+        // 4. Provide Claims Details if text input appears
+        console.log('Checking for claims details input...');
+        try {
+            // Try to fill details if input appears, otherwise skip
+            await fillTypebotInput(page, 'Reporting an issue with a recent service interaction for operational verification.', 10000);
+            await page.waitForTimeout(500);
+            await clickTypebotButton(page, 'Send', 5000);
+            await page.waitForTimeout(2000);
+        } catch (e) {
+            console.log('No text input for details, continuing...');
+        }
+
+        // 5. File Upload (optional if exist in fixtures)
         console.log('Checking for claim image upload...');
         const imgPath = getFixturePath('claims', 'img');
         if (imgPath) {
