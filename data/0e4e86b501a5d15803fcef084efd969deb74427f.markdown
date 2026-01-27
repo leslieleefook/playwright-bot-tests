@@ -1,0 +1,16 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e7]:
+    - generic [ref=e12]:
+      - generic [ref=e13]: 2. How many hours do you spend daily on these tasks that can be AI augmented or automated? *
+      - textbox [ref=e14]
+      - paragraph [ref=e15]: This field is required
+    - generic [ref=e17]:
+      - button [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+      - button "Continue" [active] [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: Continue
+  - img [ref=e26] [cursor=pointer]
+```
