@@ -1,0 +1,69 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus AI Compliance Bot
+            - generic [ref=e33]: We're checking to see if everything falls in line with anti-money laundering rules. It's all above board and helps us keep things on the straight and narrow.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our teammates will check for compliance. They're pros at keeping secrets.
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your first document Feel free just to take a picture of it
+            - generic [ref=e75]: Can you provide a valid ID please?
+        - generic [ref=e77]:
+          - img "Attached image 1" [ref=e79] [cursor=pointer]
+          - generic [ref=e81]: File uploaded
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - figure [ref=e86]:
+            - img "Bot avatar" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e94]: Thank you
+            - generic [ref=e100]: Can you provide a Job Letter please?
+        - generic [ref=e102]:
+          - img "Attached image 1" [ref=e104] [cursor=pointer]
+          - generic [ref=e106]: File uploaded
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - figure [ref=e111]:
+            - img "Bot avatar" [ref=e112]
+          - generic [ref=e113]:
+            - generic [ref=e119]: Thank you
+            - generic [ref=e125]: Can you provide a recent utility bill please?
+        - generic [ref=e127]:
+          - img "Attached image 1" [ref=e129] [cursor=pointer]
+          - generic [ref=e131]: File uploaded
+      - generic [ref=e132]:
+        - generic [ref=e133]:
+          - figure [ref=e136]:
+            - img "Bot avatar" [ref=e137]
+          - generic [ref=e138]:
+            - generic [ref=e144]: Thank you
+            - generic [ref=e150]: I'm now pass it to our compliance expert to give you a summary and ask a few questions
+            - generic [ref=e156]: Transferring you now...
+            - generic [ref=e161]:
+              - generic [ref=e162]: "Here’s a quick summary: You shared today’s date, but your ID, recent utility bill, and job letter are blank. Because nothing was provided, I can’t compare documents or verify your identity, address, or employment yet. There are no inconsistencies—just missing information."
+              - generic [ref=e163]: To get started, what government-issued photo ID can you share now (for example, a passport or driver’s license)?
+        - generic [ref=e166]:
+          - textbox "Type your answer..." [ref=e169]
+          - button "Send" [ref=e170] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e172]
+```
