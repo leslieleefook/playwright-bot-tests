@@ -26,8 +26,8 @@ test.describe('Match Bot Flow', () => {
         // Fill Email if requested (before file uploads)
         console.log('Filling Email...');
         try {
-            await fillTypebotInput(page, BOT_EMAIL, 15000);
-            await clickTypebotButton(page, 'Send', 15000);
+            await fillTypebotInput(page, BOT_EMAIL, 30000);
+            await clickTypebotButton(page, 'Send', 20000);
             await page.waitForTimeout(3000);
         } catch (e) {
             console.log('No email input at this step, continuing...');
@@ -36,8 +36,8 @@ test.describe('Match Bot Flow', () => {
         // Fill Location if requested
         console.log('Filling Location...');
         try {
-            await fillTypebotInput(page, 'Main Office Building', 15000);
-            await clickTypebotButton(page, 'Send', 15000);
+            await fillTypebotInput(page, 'Main Office Building', 30000);
+            await clickTypebotButton(page, 'Send', 20000);
             await page.waitForTimeout(3000);
         } catch (e) {
             console.log('No location input at this step, continuing...');

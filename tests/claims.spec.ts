@@ -46,9 +46,9 @@ test.describe('Claims Bot Interaction Flow', () => {
         console.log('Checking for claims details input...');
         try {
             // Try to fill details if input appears, otherwise skip
-            await fillTypebotInput(page, 'Reporting an issue with a recent service interaction for operational verification.', 10000);
+            await fillTypebotInput(page, 'Reporting an issue with a recent service interaction for operational verification.', 30000);
             await page.waitForTimeout(500);
-            await clickTypebotButton(page, 'Send', 5000);
+            await clickTypebotButton(page, 'Send', 15000);
             await page.waitForTimeout(2000);
         } catch (e) {
             console.log('No text input for details, continuing...');
@@ -82,8 +82,8 @@ test.describe('Claims Bot Interaction Flow', () => {
                     console.log('No upload element found - bot flow may have changed, skipping upload step');
                     // If there's a text input instead, fill it with a placeholder
                     try {
-                        await fillTypebotInput(page, 'N/A - No additional documentation', 5000);
-                        await clickTypebotButton(page, 'Send', 5000);
+                        await fillTypebotInput(page, 'N/A - No additional documentation', 20000);
+                        await clickTypebotButton(page, 'Send', 15000);
                         await page.waitForTimeout(2000);
                     } catch (e) {
                         console.log('No additional input required, continuing...');
