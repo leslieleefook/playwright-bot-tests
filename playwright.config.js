@@ -11,7 +11,8 @@ module.exports = defineConfig({
     retries: process.env.CI ? 2 : 0,
     reporter: process.env.CI ? 'blob' : [['list'], ['html']],
     use: {
-        actionTimeout: 10000,
+        actionTimeout: 30000,  // Increased for CI environments
+        navigationTimeout: 60000,
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',

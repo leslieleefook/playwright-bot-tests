@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance } from '../utils/uploadHelper';
+import { uploadToTypebot, getFixturePath, clickTypebotButton, waitForTypebotButtonOrAdvance, fillTypebotInput } from '../utils/uploadHelper';
 import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/match';
@@ -22,6 +22,26 @@ test.describe('Match Bot Flow', () => {
         console.log('Accepting consent...');
         await clickTypebotButton(page, 'Yes I consent', 30000);
         await page.waitForTimeout(3000);
+
+        // Fill Email if requested (before file uploads)
+        console.log('Filling Email...');
+        try {
+            await fillTypebotInput(page, BOT_EMAIL, 15000);
+            await clickTypebotButton(page, 'Send', 15000);
+            await page.waitForTimeout(3000);
+        } catch (e) {
+            console.log('No email input at this step, continuing...');
+        }
+
+        // Fill Location if requested
+        console.log('Filling Location...');
+        try {
+            await fillTypebotInput(page, 'Main Office Building', 15000);
+            await clickTypebotButton(page, 'Send', 15000);
+            await page.waitForTimeout(3000);
+        } catch (e) {
+            console.log('No location input at this step, continuing...');
+        }
 
         // Upload JD
         console.log('Uploading Job Description...');

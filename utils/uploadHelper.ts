@@ -257,19 +257,37 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
  * Handles the shadow DOM boundary using evaluate().
  * Uses React-compatible state updates with InputEvent and native setter.
  */
-export async function fillTypebotInput(page: Page, value: string, timeout: number = 30000): Promise<void> {
+export async function fillTypebotInput(page: Page, value: string, timeout: number = 60000): Promise<void> {
     console.log(`[TYPEBOT] Filling input with: ${value.substring(0, 20)}...`);
     
-    // Wait for input to appear in shadow DOM
+    // Wait for input to appear in shadow DOM (longer timeout for CI)
     const waitStart = Date.now();
-    await page.waitForFunction(() => {
-        const typebot = document.querySelector('typebot-standard');
-        if (!typebot) return false;
-        const shadow = (typebot as any).shadowRoot;
-        if (!shadow) return false;
-        const input = shadow.querySelector('input[type="text"], textarea, input:not([type="file"]):not([type="hidden"])');
-        return !!input;
-    }, { timeout });
+    try {
+        await page.waitForFunction(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            const input = shadow.querySelector('input[type="text"], input[type="email"], textarea, input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"])');
+            return !!input;
+        }, { timeout });
+    } catch (err) {
+        // Debug: log what's in the shadow DOM
+        const debugInfo = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return { error: 'no-typebot' };
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return { error: 'no-shadow' };
+            const inputs = Array.from(shadow.querySelectorAll('input')).map((i: any) => ({
+                type: i.type,
+                placeholder: i.placeholder
+            }));
+            const buttons = Array.from(shadow.querySelectorAll('button')).map((b: any) => b.textContent?.trim());
+            return { inputs, buttons, text: shadow.innerText?.substring(0, 200) };
+        });
+        console.log(`[TYPEBOT] Input not found. Debug info: ${JSON.stringify(debugInfo)}`);
+        throw err;
+    }
     console.log(`[TYPEBOT] Input element found after ${Date.now() - waitStart}ms`);
 
     // Get element info for debugging

@@ -12,12 +12,35 @@ test.describe('Airoi Bot Email Flow', () => {
 
         // Wait for form to fully load (may redirect to paperwork.incusservices.com)
         console.log('Waiting for form to load...');
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         console.log(`Current URL: ${page.url()}`);
 
-        // Step 1: Tasks - Fill and click Continue
+        // Handle any modals or overlays that might be blocking the form
+        try {
+            // Try to dismiss any cookie consent or loading overlays
+            const closeButtons = page.locator('button:has-text("Accept"), button:has-text("Close"), button:has-text("Got it")');
+            if (await closeButtons.count() > 0) {
+                console.log('Dismissing overlay...');
+                await closeButtons.first().click();
+                await page.waitForTimeout(1000);
+            }
+        } catch (e) {
+            // No overlay to dismiss
+        }
+
+        // Step 1: Tasks - Wait for any textarea to be visible first
         console.log('Filling Step 1 (Tasks)...');
-        await page.fill('textarea#fieldpage-1-field-0', 'Automating repeated daily operational data entry and reporting.');
+        
+        // First, try to find any visible textarea/input on the form
+        const formContainer = page.locator('.cs_form, form, [class*="form"]').first();
+        await formContainer.waitFor({ state: 'visible', timeout: 60000 });
+        
+        // Now find and fill the textarea
+        const textarea = page.locator('textarea').first();
+        await textarea.waitFor({ state: 'visible', timeout: 30000 });
+        await textarea.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        await textarea.fill('Automating repeated daily operational data entry and reporting.');
         
         // Click Continue button
         const continueBtn = page.locator('button.cs_button, button:has-text("Continue")').first();
@@ -25,34 +48,35 @@ test.describe('Airoi Bot Email Flow', () => {
         await continueBtn.click();
         await page.waitForTimeout(1000);
 
+        // Helper to fill field and continue
+        const fillStepAndContinue = async (value: string, stepName: string) => {
+            console.log(`Filling ${stepName}...`);
+            // Wait for any input or textarea to be visible
+            const input = page.locator('textarea:visible, input:visible').first();
+            await input.waitFor({ state: 'visible', timeout: 30000 });
+            await input.fill(value);
+            await page.waitForTimeout(500);
+            
+            // Click continue/submit button
+            const btn = page.locator('button.cs_button, button:has-text("Continue"), button[type="submit"]').first();
+            await btn.click();
+            await page.waitForTimeout(2000);
+        };
+
         // Step 2: Hours spent
-        console.log('Filling Step 2 (Hours)...');
-        await page.fill('textarea#fieldpage-2-field-0', '4');
-        await page.click('button.cs_button');
-        await page.waitForTimeout(1000);
+        await fillStepAndContinue('4', 'Step 2 (Hours)');
 
         // Step 3: Efficiency gain
-        console.log('Filling Step 3 (Efficiency)...');
-        await page.fill('input#fieldpage-3-field-0', '60');
-        await page.click('button.cs_button');
-        await page.waitForTimeout(1000);
+        await fillStepAndContinue('60', 'Step 3 (Efficiency)');
 
         // Step 4: Employees
-        console.log('Filling Step 4 (Employees)...');
-        await page.fill('input#fieldpage-4-field-0', '15');
-        await page.click('button.cs_button');
-        await page.waitForTimeout(1000);
+        await fillStepAndContinue('15', 'Step 4 (Employees)');
 
         // Step 5: Monthly Salary
-        console.log('Filling Step 5 (Salary)...');
-        await page.fill('input#fieldpage-5-field-0', '5000');
-        await page.click('button.cs_button');
-        await page.waitForTimeout(1000);
+        await fillStepAndContinue('5000', 'Step 5 (Salary)');
 
         // Step 6: Email
-        console.log('Providing Email...');
-        await page.fill('input#fieldpage-6-field-0', BOT_EMAIL);
-        await page.click('button.cs_button'); // Final Submit
+        await fillStepAndContinue(BOT_EMAIL, 'Step 6 (Email)');
         console.log('Email submission complete.');
 
         // Verify Completion (on-page)

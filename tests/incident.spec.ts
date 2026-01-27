@@ -23,13 +23,13 @@ test.describe('Incident Bot Interaction Flow', () => {
         await clickTypebotButton(page, 'Yes!', 30000);
         await page.waitForTimeout(3000);
 
-        // Helper to fill input and submit
+        // Helper to fill input and submit (with longer waits for CI)
         const fillAndSubmit = async (value: string, fieldName: string) => {
             console.log(`Filling ${fieldName}...`);
-            await page.waitForTimeout(2000); // Wait for typing animation
-            await fillTypebotInput(page, value);
+            await page.waitForTimeout(3000); // Wait for typing animation (longer for CI)
+            await fillTypebotInput(page, value, 60000); // Explicit timeout for CI
             await page.waitForTimeout(500);
-            await clickTypebotButton(page, 'Send', 10000);
+            await clickTypebotButton(page, 'Send', 30000);
             await page.waitForTimeout(3000);
         };
 
