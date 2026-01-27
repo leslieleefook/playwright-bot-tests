@@ -5,7 +5,11 @@ playwright-report/
 blob-report/
 playwright/.cache/
 .env
+.env.local
 .DS_Store
 run_artifacts/
 run_logs.txt
 all-blob-reports/
+temp-report/
+*.log
+job_log.txt

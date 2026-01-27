@@ -12,8 +12,9 @@ This document tracks all user constraints and requirements for the chatbot testi
 - **Image Support**: The framework must be capable of uploading images if requested by the bot.
 
 ## Email Credentials
-- **Username**: `accesssmartwriter3@gmail.com`
-- **Password**: `,vt5FOtn6M'uaDT}ul9Q`
+- **Username**: See `.env` file or GitHub Secrets
+- **Password**: See `.env` file or GitHub Secrets
+- **Note**: Never commit credentials to version control!
 
 ## Bot Specific Requirements
 - **Universal Input**: Always use `accesssmartwriter3@gmail.com` when a bot asks for an email address.
