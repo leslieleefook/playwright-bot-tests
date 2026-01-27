@@ -11,3 +11,6 @@ export const SMTP_HOST = process.env.SMTP_HOST || 'smtp.zoho.com';
 export const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 export const SMTP_SECURE = process.env.SMTP_SECURE !== 'false'; // Default to true for port 465
 export const NOTIFY_ON_FAILURE = process.env.NOTIFY_ON_FAILURE || 'leslieleefook@incusservices.com';
+
+// Skip email verification in CI environments where IMAP may not be accessible
+export const SKIP_EMAIL_VERIFICATION = process.env.SKIP_EMAIL_VERIFICATION === 'true' || process.env.CI === 'true';

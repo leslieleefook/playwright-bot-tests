@@ -9,3 +9,4 @@ playwright/.cache/
 run_artifacts/
 run_logs.txt
 all-blob-reports/
+temp-report/
