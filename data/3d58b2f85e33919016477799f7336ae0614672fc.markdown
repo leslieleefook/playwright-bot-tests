@@ -1,0 +1,88 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - figure [ref=e13]:
+            - img "Bot avatar" [ref=e14]
+          - generic [ref=e15]:
+            - figure [ref=e20] [cursor=pointer]:
+              - img "Bubble image" [ref=e21]
+            - generic [ref=e27]: Welcome to the Incus AI Compliance Bot
+            - generic [ref=e33]: We're checking to see if everything falls in line with anti-money laundering rules. It's all above board and helps us keep things on the straight and narrow.
+            - generic [ref=e39]: Your data's safe with us. We keep it locked away from any unwanted attention.
+            - generic [ref=e45]: Just a few of our teammates will check for compliance. They're pros at keeping secrets.
+            - generic [ref=e51]:
+              - text: Got questions? Drop us a line at
+              - link "privacy@incusservices.com" [ref=e52] [cursor=pointer]:
+                - /url: "@privacy@incusservices.com"
+        - generic [ref=e56]: Yes I consent
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - figure [ref=e61]:
+            - img "Bot avatar" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e69]: Lets start with uploading your first document Feel free just to take a picture of it
+            - generic [ref=e75]: Can you provide a valid ID please?
+        - generic [ref=e77]:
+          - img "Attached image 1" [ref=e79] [cursor=pointer]
+          - generic [ref=e81]: File uploaded
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - figure [ref=e86]:
+            - img "Bot avatar" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e94]: Thank you
+            - generic [ref=e100]: Can you provide a Job Letter please?
+        - generic [ref=e102]:
+          - img "Attached image 1" [ref=e104] [cursor=pointer]
+          - generic [ref=e106]: File uploaded
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - figure [ref=e111]:
+            - img "Bot avatar" [ref=e112]
+          - generic [ref=e113]:
+            - generic [ref=e119]: Thank you
+            - generic [ref=e125]: Can you provide a recent utility bill please?
+        - generic [ref=e127]:
+          - img "Attached image 1" [ref=e129] [cursor=pointer]
+          - generic [ref=e131]: File uploaded
+      - generic [ref=e132]:
+        - generic [ref=e133]:
+          - figure [ref=e136]:
+            - img "Bot avatar" [ref=e137]
+          - generic [ref=e138]:
+            - generic [ref=e144]: Thank you
+            - generic [ref=e150]: I'm now pass it to our compliance expert to give you a summary and ask a few questions
+            - generic [ref=e156]: Transferring you now...
+            - generic [ref=e161]:
+              - generic [ref=e162]: "Thanks for sharing your documents. Here’s a quick summary and what I’m seeing so far:"
+              - generic [ref=e163]: Summary
+              - list [ref=e164]:
+                - listitem [ref=e165]:
+                  - generic [ref=e166]: "ID: Trinidad & Tobago Driver’s Permit for Leslie Lee Fook, DOB 1977-11-13, address: #20 Jerningham Avenue, Belmont. Permit #629122 E. Expires 13-06-2026."
+                - listitem [ref=e167]:
+                  - generic [ref=e168]: "Utility bill: Digicel, addressed to Mr. Leslie Lee Fook at #233 Belmont Circular Rd, Belmont. Invoice date 01-Jun-2023, due 27-Jun-2023."
+                - listitem [ref=e169]:
+                  - generic [ref=e170]: "Job letter: Dated 20-Oct-2023. Letterhead says Best Stock Broker Ltd, but the body and signature say ACME Services Ltd; HR email uses beststockbroker.com. Role: Chief Coffee Maker, start date 01-Jan-2010, salary $3,000."
+              - generic [ref=e171]: Key inconsistencies and gaps
+              - list [ref=e172]:
+                - listitem [ref=e173]:
+                  - generic [ref=e174]: "Address mismatch: ID shows Jerningham Ave; utility bill shows Belmont Circular Rd (and references Laventille in the service location). Also “629122e” appears in the address line, which looks like your permit number, not an address element."
+                - listitem [ref=e175]:
+                  - generic [ref=e176]: "Document freshness: Utility bill is from June 2023 (too old for KYC—typically need last 3 months). Job letter is from Oct 2023 (often we need something recent, e.g., within 3–6 months)."
+                - listitem [ref=e177]:
+                  - generic [ref=e178]: "Employer details conflict: Letterhead (Best Stock Broker Ltd) doesn’t match employer named in the body/signature (ACME Services Ltd), and the HR email domain aligns with Best Stock Broker, not ACME. This is a red flag we’d need to resolve."
+                - listitem [ref=e179]:
+                  - generic [ref=e180]: Currency not stated on salary (assumed TTD, but not explicit).
+              - generic [ref=e181]: These issues don’t automatically mean high risk, but they do prevent us from completing standard KYC checks. The biggest items to clarify are your current residential address and your actual employer.
+              - generic [ref=e182]: "Question: What is your current residential address?"
+        - generic [ref=e185]:
+          - textbox "Type your answer..." [ref=e188]
+          - button "Send" [ref=e189] [cursor=pointer]
+    - region "bottom-end Notifications alt+T"
+  - alert [ref=e191]
+```
