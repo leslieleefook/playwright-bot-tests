@@ -31,7 +31,9 @@ export async function waitForEmailImap(subject: string, timeoutMs: number = 10 *
             port: IMAP_PORT,
             tls: true,
             tlsOptions: { rejectUnauthorized: false },
-            authTimeout: 3000
+            authTimeout: 30000,  // Increased from 3s to 30s for slower connections
+            connTimeout: 30000,  // Connection timeout
+            socketTimeout: 60000 // Socket timeout for read operations
         }
     };
 
