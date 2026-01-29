@@ -1,26 +1,37 @@
 import { test, expect } from '@playwright/test';
 import { waitForEmailImap, sendEmail } from '../utils/emailHelper';
-import { fillTypebotInput, clickTypebotButton } from '../utils/uploadHelper';
-import { TEST_EMAIL, NOTIFY_ON_FAILURE } from '../utils/constants';
+import { 
+    fillTypebotInputImproved,
+    clickTypebotButtonImproved,
+    waitForTypingAnimationComplete 
+} from '../utils/uploadHelper-improved';
+import { TEST_EMAIL, NOTIFY_ON_FAILURE, TIMEOUTS } from '../utils/constants';
 
 const BOT_URL = 'https://bot.incusservices.com/employeeexit';
 const BOT_EMAIL = '1677006355115_38182701@zohomail.com';
 
 test.describe('Employee Exit Bot Interaction Flow', () => {
     test('should complete exit interview flow and verify receipt', async ({ page }) => {
-        console.log(`Navigating to Employee Exit Bot: ${BOT_URL}...`);
-        await page.goto(BOT_URL);
+        console.log(`\n=== Starting Employee Exit Bot Test ===`);
+        console.log(`Bot URL: ${BOT_URL}`);
+        console.log(`Email: ${BOT_EMAIL}`);
+        
+        // Navigate to bot
+        console.log('\n[STEP 1] Navigating to Employee Exit Bot...');
+        await page.goto(BOT_URL, { timeout: TIMEOUTS.NAVIGATION });
 
         // Wait for Typebot to load
-        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 40000 });
+        console.log('[STEP 2] Waiting for Typebot to initialize...');
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: TIMEOUTS.TYPEBOT_ATTACH });
         
         // Wait for typing animation to complete
-        console.log('Waiting for typing animation to complete...');
-        await page.waitForTimeout(5000);
+        await waitForTypingAnimationComplete(page, TIMEOUTS.TYPING_ANIMATION);
+        console.log('✓ Typebot ready');
 
         // Click Ready button to start the flow
-        console.log('Clicking Ready to start...');
-        await clickTypebotButton(page, 'Ready', 30000);
+        console.log('\n[STEP 3] Clicking Ready to start...');
+        await clickTypebotButtonImproved(page, 'Ready', 30000);
+        console.log('✓ Flow initiated');
         await page.waitForTimeout(3000);
 
         // Helper to fill input and submit with better error handling
@@ -57,7 +68,7 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
                 );
                 if (nonControlButtons.length > 0) {
                     console.log(`No input, clicking button: ${nonControlButtons[0]}`);
-                    await clickTypebotButton(page, nonControlButtons[0], 10000);
+                    await clickTypebotButtonImproved(page, nonControlButtons[0], 10000);
                     await page.waitForTimeout(2000);
                     return true;
                 }
@@ -66,9 +77,9 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
             // If there's an input, fill it
             if (state.hasInput) {
                 try {
-                    await fillTypebotInput(page, value, 60000);
+                    await fillTypebotInputImproved(page, value, 60000);
                     await page.waitForTimeout(500);
-                    await clickTypebotButton(page, 'Send', 30000);
+                    await clickTypebotButtonImproved(page, 'Send', 30000);
                     await page.waitForTimeout(3000);
                     return true;
                 } catch (e: any) {
@@ -102,7 +113,7 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
         }
 
         // Verify Completion - Check final bot state
-        console.log('Verifying interview completion...');
+        console.log('\n[STEP 4] Verifying interview completion...');
         await page.waitForTimeout(5000);
         
         // Get final bot content to verify something happened
@@ -123,11 +134,11 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
         });
         
         console.log(`Final state: ${JSON.stringify(finalState)}`);
-        console.log('Employee Exit Bot UI stage complete.');
+        console.log('✓ Employee Exit Bot UI stage complete');
 
         // Verify Email - with reduced timeout since flow may have ended early
         const emailSubject = 'Exit Feedback';
-        console.log(`Waiting for email with subject: ${emailSubject}...`);
+        console.log(`\n[STEP 5] Waiting for email: "${emailSubject}"...`);
         const mail = await waitForEmailImap(emailSubject, 5 * 60 * 1000); // 5 min timeout
 
         if (!mail) {
@@ -140,7 +151,16 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
                 console.log('[WARNING] Bot flow completed but email not received - may be external service issue');
                 // Don't send failure notification for email issues if bot flow worked
             } else {
+                console.error('\n❌ TEST FAILED: Email not received and bot flow did not complete');
                 console.log(`[FAIL] Email not received. Sending notification to ${NOTIFY_ON_FAILURE}...`);
+                
+                // Save screenshot for debugging
+                try {
+                    await page.screenshot({ path: `test-results/employeeexit-failure-${Date.now()}.png`, fullPage: true });
+                } catch (e) {
+                    // Ignore screenshot errors
+                }
+                
                 await sendEmail(
                     NOTIFY_ON_FAILURE,
                     'FAILED: Employee Exit Bot Test',
@@ -149,7 +169,8 @@ test.describe('Employee Exit Bot Interaction Flow', () => {
             }
             throw new Error(`Email not found: ${emailSubject}`);
         }
-        console.log(`[SUCCESS] Verified email: ${mail.subject}`);
+        
+        console.log(`\n✅ TEST PASSED: Verified email: ${mail.subject}`);
         expect(mail).toBeTruthy();
     });
 });
