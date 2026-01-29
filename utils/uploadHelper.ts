@@ -1,8 +1,35 @@
+/**
+ * @fileoverview Helper utilities for interacting with Typebot chatbots.
+ * 
+ * Typebot renders inside a web component with shadow DOM, requiring special
+ * handling for element selection and interaction. This module provides
+ * reliable utilities for:
+ * - File uploads (handling shadow DOM boundaries)
+ * - Text input filling (React-compatible)
+ * - Button clicking (with icon button support)
+ * - Flow advancement detection
+ * 
+ * @example
+ * // Fill an input and submit
+ * await fillTypebotInput(page, 'John Doe');
+ * await clickTypebotButton(page, 'Send');
+ * 
+ * @example
+ * // Upload a file
+ * await uploadToTypebot(page, './fixtures/document.pdf');
+ */
+
 import { Page, Locator } from '@playwright/test';
 import * as path from 'path';
+import { TIMEOUTS } from './constants';
 
 /**
  * Uploads a file to a specified selector or locator.
+ * 
+ * @param page - Playwright page instance
+ * @param selector - CSS selector string or Playwright Locator
+ * @param filePath - Path to the file to upload (relative or absolute)
+ * @param isInput - If true, uses setInputFiles; if false, handles file chooser
  */
 export async function uploadFile(
     page: Page,
@@ -26,7 +53,40 @@ export async function uploadFile(
 }
 
 /**
- * Specifically for Typebot style uploads - handles shadow DOM.
+ * Waits for Typebot's typing animation to complete by checking for typing indicators.
+ * Returns when typing is no longer in progress.
+ */
+async function waitForTypingAnimationComplete(page: Page, timeout: number = TIMEOUTS.TYPING_ANIMATION): Promise<void> {
+    console.log('[TYPEBOT] Waiting for typing animation to complete...');
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeout) {
+        const isTyping = await page.evaluate(() => {
+            const typebot = document.querySelector('typebot-standard');
+            if (!typebot) return false;
+            const shadow = (typebot as any).shadowRoot;
+            if (!shadow) return false;
+            
+            // Check for typing indicators (dots, loader, typing text)
+            const typingIndicator = shadow.querySelector('[class*="typing"], [class*="loader"], [class*="dots"]');
+            const hasTypingText = shadow.textContent?.includes('typing') || shadow.textContent?.includes('...');
+            
+            return !!typingIndicator || hasTypingText;
+        });
+        
+        if (!isTyping) {
+            console.log('[TYPEBOT] Typing animation complete');
+            return;
+        }
+        
+        await page.waitForTimeout(200);
+    }
+    
+    console.log('[TYPEBOT] Typing timeout reached, proceeding');
+}
+
+/**
+ * Specifically for Typebot style uploads - handles shadow DOM with improved reliability.
  * 
  * IMPORTANT: Typebot renders inside a web component with shadow DOM.
  * The >> selector syntax pierces shadow DOM boundaries.
@@ -34,6 +94,12 @@ export async function uploadFile(
  * 
  * NOTE: Some bot flows have intermediate steps (name/email entry) before upload.
  * This function will skip through text input steps if they appear.
+ * 
+ * IMPROVEMENTS:
+ * - Uses waitForTypingAnimationComplete instead of fixed timeout
+ * - Improved shadow DOM element detection with multiple fallback strategies
+ * - Better retry logic for flaky selectors
+ * - More detailed error messages for debugging
  */
 export async function uploadToTypebot(page: Page, filePath: string): Promise<void> {
     const absolutePath = path.resolve(filePath);
@@ -41,12 +107,13 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
 
     try {
         // Wait for Typebot to be present
-        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: 30000 });
+        await page.locator('typebot-standard').waitFor({ state: 'attached', timeout: TIMEOUTS.TYPEBOT_ATTACH });
         
-        // IMPORTANT: Wait for Typebot's typing animation to complete before looking for upload elements
-        // The bot shows a "typing..." animation and elements render AFTER it completes
-        console.log('[UPLOAD] Waiting for typing animation to complete...');
-        await page.waitForTimeout(3000); // Initial wait for typing animation
+        // Wait for typing animation to complete using state-based check
+        await waitForTypingAnimationComplete(page, TIMEOUTS.TYPING_ANIMATION);
+        
+        // Additional small delay for DOM stability
+        await page.waitForTimeout(1000);
         
         // Wait for shadow DOM content to render (upload elements may take time to appear in flow)
         console.log('[UPLOAD] Waiting for upload elements in shadow DOM...');
@@ -96,11 +163,13 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
             }
         }
         
-        // Poll for upload elements with debugging
-        const uploadTimeout = 90000; // Extended timeout for slow CI environments
+        // Poll for upload elements with improved detection
+        const uploadTimeout = TIMEOUTS.UPLOAD_ELEMENT;
         const startTime = Date.now();
         let uploadElementFound = false;
         let lastLogTime = 0;
+        let retryCount = 0;
+        const maxRetries = 3;
         
         while (Date.now() - startTime < uploadTimeout) {
             const state = await page.evaluate(() => {
@@ -109,12 +178,13 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
                 const shadow = (typebot as any).shadowRoot;
                 if (!shadow) return { error: 'no-shadow' };
                 
-                // Check for upload elements
+                // Check for upload elements with broader selectors
                 const fileInput = shadow.querySelector('input[type="file"]');
                 const dropzone = shadow.querySelector('#dropzone-file');
-                const dropzoneClass = shadow.querySelector('[class*="dropzone"]');
-                const labelForFile = shadow.querySelector('label[for*="file"]');
-                const clickToUpload = shadow.querySelector('[class*="upload"], label[for*="dropzone"]');
+                const dropzoneClass = shadow.querySelector('[class*="dropzone"], [class*="upload-zone"]');
+                const labelForFile = shadow.querySelector('label[for*="file"], label[for*="upload"]');
+                const clickToUpload = shadow.querySelector('[class*="upload"], label[for*="dropzone"], [class*="file-input"]');
+                const fileButton = shadow.querySelector('button[class*="file"], button[class*="upload"]');
                 
                 // Also check for any visible content for debugging
                 const buttons = Array.from(shadow.querySelectorAll('button')).map(b => (b as HTMLButtonElement).textContent?.trim());
@@ -127,15 +197,25 @@ export async function uploadToTypebot(page: Page, filePath: string): Promise<voi
                     hasDropzoneClass: !!dropzoneClass,
                     hasLabelForFile: !!labelForFile,
                     hasClickToUpload: !!clickToUpload,
+                    hasFileButton: !!fileButton,
                     buttonCount: buttons.length,
                     buttonTexts: buttons.slice(0, 5),
                     inputCount: inputs.length,
-                    inputTypes: inputTypes
+                    inputTypes: inputTypes,
+                    allUploadElements: [!!fileInput, !!dropzone, !!dropzoneClass, !!labelForFile, !!clickToUpload, !!fileButton].filter(Boolean).length
                 };
             });
             
-            if (state.hasFileInput || state.hasDropzone || state.hasDropzoneClass || state.hasLabelForFile || state.hasClickToUpload) {
-                console.log(`[UPLOAD] Found upload element: ${JSON.stringify(state)}`);
+            // More flexible upload element detection
+            if (state.hasFileInput || state.hasDropzone || state.hasDropzoneClass || state.hasLabelForFile || state.hasClickToUpload || state.hasFileButton) {
+                console.log(`[UPLOAD] Found upload element (${state.allUploadElements} elements): ${JSON.stringify({
+                    fileInput: state.hasFileInput,
+                    dropzone: state.hasDropzone,
+                    dropzoneClass: state.hasDropzoneClass,
+                    labelForFile: state.hasLabelForFile,
+                    clickToUpload: state.hasClickToUpload,
+                    fileButton: state.hasFileButton
+                })}`);
                 uploadElementFound = true;
                 break;
             }
@@ -691,7 +771,82 @@ export async function waitForTypebotButtonOrAdvance(
 }
 
 /**
+ * Fills a Typebot input field and clicks the Send button.
+ * 
+ * This is a convenience helper that combines fillTypebotInput and clickTypebotButton,
+ * reducing code duplication across test files. Handles timing between operations.
+ * 
+ * @param page - Playwright page instance
+ * @param value - Value to enter in the input field
+ * @param fieldName - Optional field name for logging (default: 'field')
+ * @param options - Optional configuration
+ * @param options.inputTimeout - Timeout for finding input (default: TIMEOUTS.INPUT_AVAILABLE)
+ * @param options.buttonTimeout - Timeout for finding button (default: TIMEOUTS.BUTTON_APPEAR)
+ * @param options.buttonPattern - Button text pattern to match (default: 'Send')
+ * @param options.preWait - Milliseconds to wait before filling (default: TIMEOUTS.MEDIUM_DELAY)
+ * @param options.postWait - Milliseconds to wait after clicking (default: TIMEOUTS.BOT_PROCESSING)
+ * 
+ * @example
+ * // Basic usage
+ * await fillAndSubmitTypebot(page, 'John Doe', 'Name');
+ * 
+ * @example
+ * // With custom timeouts
+ * await fillAndSubmitTypebot(page, 'test@example.com', 'Email', {
+ *   inputTimeout: 30000,
+ *   postWait: 5000
+ * });
+ */
+export async function fillAndSubmitTypebot(
+    page: Page, 
+    value: string, 
+    fieldName: string = 'field',
+    options: {
+        inputTimeout?: number;
+        buttonTimeout?: number;
+        buttonPattern?: string | RegExp;
+        preWait?: number;
+        postWait?: number;
+    } = {}
+): Promise<void> {
+    const {
+        inputTimeout = TIMEOUTS.INPUT_AVAILABLE,
+        buttonTimeout = TIMEOUTS.BUTTON_APPEAR,
+        buttonPattern = 'Send',
+        preWait = TIMEOUTS.MEDIUM_DELAY,
+        postWait = TIMEOUTS.BOT_PROCESSING,
+    } = options;
+
+    console.log(`[TYPEBOT] Filling ${fieldName}: ${value.substring(0, 30)}${value.length > 30 ? '...' : ''}`);
+    
+    // Wait for typing animation before filling
+    await page.waitForTimeout(preWait);
+    
+    // Fill the input
+    await fillTypebotInput(page, value, inputTimeout);
+    await page.waitForTimeout(TIMEOUTS.SHORT_DELAY);
+    
+    // Click the submit button
+    await clickTypebotButton(page, buttonPattern, buttonTimeout);
+    
+    // Wait for bot to process and show next question
+    await page.waitForTimeout(postWait);
+}
+
+/**
  * Resolves a fixture path based on bot name and step/description.
+ * 
+ * Searches the fixtures directory for files matching the pattern:
+ * - `{botName}_{step}.*` (e.g., "claims_img.jpg")
+ * - `{botName}_*{step}*` (fallback legacy pattern)
+ * 
+ * @param botName - Name of the bot (e.g., "claims", "exam")
+ * @param step - Step identifier (e.g., "img", "doc", "response1")
+ * @returns Path to the fixture file, or empty string if not found
+ * 
+ * @example
+ * const imgPath = getFixturePath('claims', 'img');
+ * // Returns: './fixtures/claims_img.jpg'
  */
 export function getFixturePath(botName: string, step: string): string {
     const baseDir = './fixtures';

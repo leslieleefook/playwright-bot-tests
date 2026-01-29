@@ -79,7 +79,7 @@ test.describe('Exam Bot - Grading Analysis', () => {
                 
                 // Get all message text content
                 const messages = shadow.querySelectorAll('[class*="message"], [class*="bubble"], [class*="text"]');
-                const allText = Array.from(messages).map(m => m.textContent || '').join(' ').toLowerCase();
+                const allText = Array.from(messages).map((m: any) => m.textContent || '').join(' ').toLowerCase();
                 
                 // Check for indicators of grading analysis
                 // The bot should mention scores, grades, or analysis results
@@ -122,7 +122,7 @@ test.describe('Exam Bot - Grading Analysis', () => {
             
             const messages = shadow.querySelectorAll('[class*="message"], [class*="bubble"], [class*="text"]');
             return Array.from(messages)
-                .map(m => m.textContent?.substring(0, 200))
+                .map((m: any) => m.textContent?.substring(0, 200))
                 .filter(Boolean)
                 .slice(-5)
                 .join('\n---\n');

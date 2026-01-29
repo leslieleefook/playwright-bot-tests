@@ -103,8 +103,8 @@ test.describe('Incident Bot Interaction Flow', () => {
 
             if (state.hasButtons) {
                 // Click the first non-Send button
-                console.log(`Button step detected: ${state.buttons.join(', ')}`);
-                const buttonToClick = state.buttons.find((b: string) => b !== 'Send' && b !== 'Stop recording');
+                console.log(`Button step detected: ${state.buttons?.join(', ') || 'no buttons'}`);
+                const buttonToClick = state.buttons?.find((b: string) => b !== 'Send' && b !== 'Stop recording');
                 if (buttonToClick) {
                     await clickTypebotButton(page, buttonToClick, 10000);
                     await page.waitForTimeout(2000);

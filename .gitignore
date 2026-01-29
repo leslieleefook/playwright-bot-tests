@@ -1,15 +1,51 @@
+# Dependencies
 node_modules/
-.tmp/
+
+# Playwright artifacts
 test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
-.env
-.env.local
-.DS_Store
-run_artifacts/
-run_logs.txt
 all-blob-reports/
 temp-report/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+.tmp/
+*.tmp
+*.temp
+
+# Logs
 *.log
+run_logs.txt
 job_log.txt
+shard*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+run_artifacts/
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# TypeScript cache
+*.tsbuildinfo
